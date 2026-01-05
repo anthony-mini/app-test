@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
@@ -59,12 +60,19 @@ export default function OnboardingScreen() {
 
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
-  const scrollTo = () => {
+  const scrollTo = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (currentIndex < slides.length - 1) {
       slidesRef.current?.scrollToIndex({ index: currentIndex + 1 });
     } else {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.push('/(vacation)/home');
     }
+  };
+
+  const handleSkip = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/(vacation)/home');
   };
 
   const renderItem = ({ item }: { item: OnboardingSlide }) => (
@@ -133,7 +141,7 @@ export default function OnboardingScreen() {
           </Text>
         </TouchableOpacity>
         {currentIndex < slides.length - 1 && (
-          <TouchableOpacity onPress={() => router.push('/(vacation)/home')}>
+          <TouchableOpacity onPress={handleSkip}>
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
         )}

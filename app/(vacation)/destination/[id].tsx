@@ -1,16 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    Dimensions,
-    FlatList,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  FlatList,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  View,
 } from 'react-native';
+import { Colors } from '../../../constants/Colors';
 import { useBookingViewModel } from '../../../viewmodels/BookingViewModel';
 import { useDestinationViewModel } from '../../../viewmodels/DestinationViewModel';
 
@@ -19,6 +22,8 @@ const { height } = Dimensions.get('window');
 export default function DestinationDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
   const { destinations, toggleFavorite, favorites } = useDestinationViewModel();
   const { createBooking } = useBookingViewModel();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -34,6 +39,7 @@ export default function DestinationDetailScreen() {
   }
 
   const handleBookNow = async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const success = await createBooking({
       destinationId: destination.id,
       checkInDate: new Date(),
@@ -44,6 +50,16 @@ export default function DestinationDetailScreen() {
     if (success) {
       router.push('/(vacation)/booking-confirmation');
     }
+  };
+
+  const handleFavoriteToggle = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    toggleFavorite(destination.id);
+  };
+
+  const handleBackPress = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.back();
   };
 
   const renderImageItem = ({ item, index }: { item: string; index: number }) => (
@@ -66,19 +82,19 @@ export default function DestinationDetailScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.imageContainer}>
           <Image
             source={{ uri: destination.images[selectedImageIndex] || destination.imageUrl }}
             style={styles.mainImage}
           />
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.favoriteButtonDetail}
-            onPress={() => toggleFavorite(destination.id)}
+            onPress={handleFavoriteToggle}
           >
             <Ionicons
               name={favorites.has(destination.id) ? 'heart' : 'heart-outline'}
@@ -99,13 +115,13 @@ export default function DestinationDetailScreen() {
           />
         )}
 
-        <View style={styles.contentContainer}>
+        <View style={[styles.contentContainer, { backgroundColor: colors.background }]}>
           <View style={styles.headerSection}>
             <View style={styles.titleContainer}>
-              <Text style={styles.destinationTitle}>{destination.name}</Text>
+              <Text style={[styles.destinationTitle, { color: colors.text }]}>{destination.name}</Text>
               <View style={styles.locationContainer}>
                 <Ionicons name="location" size={16} color="#6366F1" />
-                <Text style={styles.locationDetail}>
+                <Text style={[styles.locationDetail, { color: colors.textSecondary }]}>
                   {destination.location}, {destination.country}
                 </Text>
               </View>
@@ -118,12 +134,12 @@ export default function DestinationDetailScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>About</Text>
-            <Text style={styles.description}>{destination.description}</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>About</Text>
+            <Text style={[styles.description, { color: colors.textSecondary }]}>{destination.description}</Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Amenities</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Amenities</Text>
             <FlatList
               data={destination.amenities}
               renderItem={renderAmenityItem}
@@ -134,7 +150,7 @@ export default function DestinationDetailScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Location</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Location</Text>
             <View style={styles.mapPlaceholder}>
               <Ionicons name="map" size={48} color="#6366F1" />
               <Text style={styles.mapText}>Map view coming soon</Text>
@@ -157,7 +173,7 @@ export default function DestinationDetailScreen() {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
         <View style={styles.priceContainer}>
           <Text style={styles.priceLabel}>Price</Text>
           <Text style={styles.priceAmount}>

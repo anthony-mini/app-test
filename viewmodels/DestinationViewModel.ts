@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Destination, DestinationCategory } from '../models/Destination';
+import LocationService, { UserLocation } from '../services/LocationService';
+import StorageService from '../services/StorageService';
 
 export const useDestinationViewModel = () => {
   const [destinations, setDestinations] = useState<Destination[]>([]);
@@ -8,11 +10,24 @@ export const useDestinationViewModel = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
 
   useEffect(() => {
     loadDestinations();
     loadCategories();
+    loadFavorites();
+    loadUserLocation();
   }, []);
+
+  const loadFavorites = async () => {
+    const savedFavorites = await StorageService.getFavorites();
+    setFavorites(new Set(savedFavorites));
+  };
+
+  const loadUserLocation = async () => {
+    const location = await LocationService.getCurrentLocation();
+    setUserLocation(location);
+  };
 
   const loadDestinations = async () => {
     setIsLoading(true);
@@ -123,7 +138,15 @@ export const useDestinationViewModel = () => {
     return matchesCategory && matchesSearch;
   });
 
-  const toggleFavorite = (destinationId: string) => {
+  const toggleFavorite = async (destinationId: string) => {
+    const isFavorite = favorites.has(destinationId);
+    
+    if (isFavorite) {
+      await StorageService.removeFavorite(destinationId);
+    } else {
+      await StorageService.addFavorite(destinationId);
+    }
+
     setFavorites((prev) => {
       const newFavorites = new Set(prev);
       if (newFavorites.has(destinationId)) {
@@ -151,5 +174,7 @@ export const useDestinationViewModel = () => {
     isLoading,
     favorites,
     toggleFavorite,
+    userLocation,
+    refreshLocation: loadUserLocation,
   };
 };

@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
@@ -11,7 +12,9 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    useColorScheme,
 } from 'react-native';
+import { Colors } from '../../constants/Colors';
 import { Destination } from '../../models/Destination';
 import { useDestinationViewModel } from '../../viewmodels/DestinationViewModel';
 
@@ -20,6 +23,9 @@ const CARD_WIDTH = width * 0.7;
 
 export default function HomeScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+  
   const {
     destinations,
     categories,
@@ -29,21 +35,34 @@ export default function HomeScreen() {
     setSearchQuery,
     toggleFavorite,
     favorites,
+    userLocation,
+    refreshLocation,
   } = useDestinationViewModel();
+
+  const handleCategoryPress = async (categoryId: string) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedCategory(categoryId);
+  };
+
+  const handleFavoritePress = async (destinationId: string) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    toggleFavorite(destinationId);
+  };
 
   const renderCategoryItem = ({ item }: any) => (
     <TouchableOpacity
       style={[
         styles.categoryCard,
-        selectedCategory === item.id && styles.categoryCardActive,
+        { backgroundColor: colors.card },
+        selectedCategory === item.id && { backgroundColor: colors.primary },
       ]}
-      onPress={() => setSelectedCategory(item.id)}
+      onPress={() => handleCategoryPress(item.id)}
     >
       <Text style={styles.categoryIcon}>{item.icon}</Text>
       <Text
         style={[
-          styles.categoryText,
-          selectedCategory === item.id && styles.categoryTextActive,
+          { fontSize: 14, fontWeight: '600', color: colors.text },
+          selectedCategory === item.id && { color: '#fff' },
         ]}
       >
         {item.name}
@@ -59,7 +78,7 @@ export default function HomeScreen() {
       <Image source={{ uri: item.imageUrl }} style={styles.destinationImage} />
       <TouchableOpacity
         style={styles.favoriteButton}
-        onPress={() => toggleFavorite(item.id)}
+        onPress={() => handleFavoritePress(item.id)}
       >
         <Ionicons
           name={favorites.has(item.id) ? 'heart' : 'heart-outline'}
@@ -91,11 +110,13 @@ export default function HomeScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.card }]}>
         <View>
-          <Text style={styles.greeting}>Hello, Traveler! 👋</Text>
-          <Text style={styles.subtitle}>Where do you want to go?</Text>
+          <Text style={[styles.greeting, { color: colors.text }]}>Hello, Traveler! 👋</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            {userLocation ? `${userLocation.city || 'Your location'}` : 'Where do you want to go?'}
+          </Text>
         </View>
         <TouchableOpacity style={styles.profileButton}>
           <Image
@@ -105,16 +126,22 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.searchContainer}>
+      <View style={[styles.searchContainer, { backgroundColor: colors.card }]}>
         <Ionicons name="search-outline" size={20} color="#999" style={styles.searchIcon} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.text }]}
           placeholder="Search destinations..."
-          placeholderTextColor="#999"
+          placeholderTextColor={colors.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
-        <TouchableOpacity style={styles.filterButton}>
+        <TouchableOpacity 
+          style={styles.filterButton}
+          onPress={async () => {
+            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            refreshLocation();
+          }}
+        >
           <Ionicons name="options-outline" size={20} color="#6366F1" />
         </TouchableOpacity>
       </View>

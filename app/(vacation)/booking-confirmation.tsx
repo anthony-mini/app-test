@@ -1,24 +1,37 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Colors } from '../../constants/Colors';
 
 export default function BookingConfirmationScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+
+  useEffect(() => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, []);
+
+  const handleBackToHome = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/(vacation)/home');
+  };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
         <View style={styles.iconContainer}>
           <Ionicons name="checkmark-circle" size={100} color="#10B981" />
         </View>
-        <Text style={styles.title}>Booking Confirmed!</Text>
-        <Text style={styles.message}>
+        <Text style={[styles.title, { color: colors.text }]}>Booking Confirmed!</Text>
+        <Text style={[styles.message, { color: colors.textSecondary }]}>
           Your vacation booking has been successfully confirmed. Check your email for details.
         </Text>
         <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push('/(vacation)/home')}
+          style={[styles.button, { backgroundColor: colors.primary }]}
+          onPress={handleBackToHome}
         >
           <Text style={styles.buttonText}>Back to Home</Text>
         </TouchableOpacity>
