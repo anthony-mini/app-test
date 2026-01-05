@@ -52,6 +52,10 @@ export const useDestinationViewModel = () => {
           category: 'beach',
           isFavorite: false,
           availableDates: [],
+          coordinates: {
+            latitude: -8.6705,
+            longitude: 115.2126,
+          },
         },
         {
           id: '2',
@@ -71,6 +75,10 @@ export const useDestinationViewModel = () => {
           category: 'mountain',
           isFavorite: false,
           availableDates: [],
+          coordinates: {
+            latitude: 45.9763,
+            longitude: 7.6586,
+          },
         },
         {
           id: '3',
@@ -90,6 +98,10 @@ export const useDestinationViewModel = () => {
           category: 'city',
           isFavorite: false,
           availableDates: [],
+          coordinates: {
+            latitude: 35.6762,
+            longitude: 139.6503,
+          },
         },
         {
           id: '4',
@@ -109,6 +121,10 @@ export const useDestinationViewModel = () => {
           category: 'beach',
           isFavorite: false,
           availableDates: [],
+          coordinates: {
+            latitude: 36.4618,
+            longitude: 25.3753,
+          },
         },
       ];
       setDestinations(mockDestinations);

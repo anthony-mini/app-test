@@ -191,6 +191,61 @@ const colors = Colors[colorScheme ?? 'light'];
 
 ---
 
+## ✅ 5. Carte Interactive (react-native-maps)
+
+### Description
+Affichage de cartes interactives avec marqueurs pour visualiser l'emplacement exact des destinations.
+
+### Implémentation
+- **Package**: `react-native-maps`
+- **Provider**: Google Maps (iOS et Android)
+- **Coordonnées GPS**: Latitude/longitude pour chaque destination
+
+### Fonctionnalités
+- Carte interactive avec zoom et défilement
+- Marqueur personnalisé pour chaque destination
+- Info-bulle avec nom et localisation
+- Bouton "Open in Maps" avec haptic feedback
+- Coordonnées GPS réelles pour toutes les destinations
+
+### Coordonnées des destinations
+- **Bali Beach Resort**: -8.6705, 115.2126 (Seminyak, Indonésie)
+- **Swiss Alps Chalet**: 45.9763, 7.6586 (Zermatt, Suisse)
+- **Tokyo City Hotel**: 35.6762, 139.6503 (Shibuya, Japon)
+- **Santorini Villa**: 36.4618, 25.3753 (Oia, Grèce)
+
+### Utilisation dans l'app
+```typescript
+// Dans destination/[id].tsx
+<MapView
+  style={styles.map}
+  provider={PROVIDER_GOOGLE}
+  initialRegion={{
+    latitude: destination.coordinates.latitude,
+    longitude: destination.coordinates.longitude,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
+  }}
+  scrollEnabled={true}
+  zoomEnabled={true}
+>
+  <Marker
+    coordinate={{
+      latitude: destination.coordinates.latitude,
+      longitude: destination.coordinates.longitude,
+    }}
+    title={destination.name}
+    description={`${destination.location}, ${destination.country}`}
+  />
+</MapView>
+```
+
+### Configuration requise
+- **iOS**: Aucune configuration supplémentaire
+- **Android**: Google Maps API key (optionnel pour dev)
+
+---
+
 ## 📊 Résumé des Fonctionnalités
 
 | Fonctionnalité | Package | Implémentation | Écrans |
@@ -199,15 +254,17 @@ const colors = Colors[colorScheme ?? 'light'];
 | **Stockage Local** | `@react-native-async-storage/async-storage` | `StorageService.ts` | Home, Details |
 | **Haptic Feedback** | `expo-haptics` | Inline dans les écrans | Tous |
 | **Dark Mode** | React Native API | `Colors.ts` + `useColorScheme()` | Tous |
+| **Carte Interactive** | `react-native-maps` | MapView + Marker | Details |
 
 ## 🎯 Conformité aux Exigences
 
-✅ **AU MOINS 2 fonctionnalités natives** → **4 implémentées**
+✅ **AU MOINS 2 fonctionnalités natives** → **5 implémentées**
 
 1. ✅ Géolocalisation
 2. ✅ Stockage local (AsyncStorage)
 3. ✅ Vibration (Haptic Feedback)
 4. ✅ Dark / Light mode (API système)
+5. ✅ Carte Interactive (Maps)
 
 ## 🧪 Tests
 
@@ -231,6 +288,13 @@ const colors = Colors[colorScheme ?? 'light'];
 2. Relancer l'app
 3. Vérifier que tous les écrans sont en mode sombre
 
+### Tester la carte interactive
+1. Ouvrir les détails d'une destination
+2. Scroller jusqu'à la section "Location"
+3. Vérifier que la carte s'affiche avec le marqueur
+4. Zoomer et déplacer la carte
+5. Taper sur le marqueur pour voir les infos
+
 ## 📱 Compatibilité
 
 - **iOS**: ✅ Toutes les fonctionnalités supportées
@@ -241,6 +305,7 @@ const colors = Colors[colorScheme ?? 'light'];
 
 ```bash
 npm install @react-native-async-storage/async-storage expo-location
+npx expo install react-native-maps
 ```
 
 Note: `expo-haptics` est déjà inclus dans le SDK Expo.

@@ -14,6 +14,10 @@ export interface Destination {
   category: 'beach' | 'mountain' | 'city' | 'countryside';
   isFavorite: boolean;
   availableDates: Date[];
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 export interface DestinationCategory {

@@ -36,11 +36,12 @@ L'application suit le pattern MVVM (Model-View-ViewModel) pour une séparation c
   - Galerie d'images
   - Informations complètes (rating, prix, localisation)
   - Liste des équipements
+  - **Carte interactive** : MapView avec marqueur de localisation
   - Bouton de réservation
   - Système de favoris avec haptic feedback
 - **Confirmation de réservation** : Feedback haptique de succès
 
-## 📱 Fonctionnalités Natives (4/4 implémentées)
+## 📱 Fonctionnalités Natives (5/5 implémentées)
 
 ### 1. ✅ **Géolocalisation** (`expo-location`)
 - Demande de permissions automatique
@@ -87,6 +88,18 @@ L'application suit le pattern MVVM (Model-View-ViewModel) pour une séparation c
 - `constants/Colors.ts` - Palettes de couleurs
 - `contexts/ThemeContext.tsx` - Contexte de thème
 - Tous les écrans utilisent `useColorScheme()`
+
+### 5. ✅ **Carte Interactive** (`react-native-maps`)
+- Affichage de carte interactive sur la page de détails
+- Marqueur personnalisé pour chaque destination
+- Zoom et défilement activés
+- Coordonnées GPS réelles pour chaque destination
+- Bouton "Open in Maps" avec haptic feedback
+
+**Fichiers concernés:**
+- `models/Destination.ts` - Ajout du champ coordinates
+- `viewmodels/DestinationViewModel.ts` - Coordonnées pour chaque destination
+- `app/(vacation)/destination/[id].tsx` - MapView avec marqueur
 
 ### 🎯 Design
 - Interface moderne et épurée
@@ -136,6 +149,7 @@ Index (/)
 - **@react-native-async-storage/async-storage** - Stockage local persistant
 - **expo-haptics** - Feedback haptique/vibration
 - **useColorScheme** (React Native) - Détection du thème système
+- **react-native-maps** - Cartes interactives avec marqueurs
 
 ## 📦 Structure du projet
 
@@ -234,4 +248,22 @@ await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 // Détection automatique
 const colorScheme = useColorScheme(); // 'light' | 'dark'
 const colors = Colors[colorScheme ?? 'light'];
+```
+
+### Carte Interactive
+```typescript
+// Affichage de la carte avec marqueur
+<MapView
+  initialRegion={{
+    latitude: destination.coordinates.latitude,
+    longitude: destination.coordinates.longitude,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
+  }}
+>
+  <Marker
+    coordinate={destination.coordinates}
+    title={destination.name}
+  />
+</MapView>
 ```

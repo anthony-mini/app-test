@@ -13,6 +13,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Colors } from '../../../constants/Colors';
 import { useBookingViewModel } from '../../../viewmodels/BookingViewModel';
 import { useDestinationViewModel } from '../../../viewmodels/DestinationViewModel';
@@ -151,9 +152,37 @@ export default function DestinationDetailScreen() {
 
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Location</Text>
-            <View style={styles.mapPlaceholder}>
-              <Ionicons name="map" size={48} color="#6366F1" />
-              <Text style={styles.mapText}>Map view coming soon</Text>
+            <View style={styles.mapContainer}>
+              <MapView
+                style={styles.map}
+                provider={PROVIDER_GOOGLE}
+                initialRegion={{
+                  latitude: destination.coordinates.latitude,
+                  longitude: destination.coordinates.longitude,
+                  latitudeDelta: 0.0922,
+                  longitudeDelta: 0.0421,
+                }}
+                scrollEnabled={true}
+                zoomEnabled={true}
+              >
+                <Marker
+                  coordinate={{
+                    latitude: destination.coordinates.latitude,
+                    longitude: destination.coordinates.longitude,
+                  }}
+                  title={destination.name}
+                  description={`${destination.location}, ${destination.country}`}
+                />
+              </MapView>
+              <TouchableOpacity 
+                style={styles.mapOverlay}
+                onPress={async () => {
+                  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }}
+              >
+                <Ionicons name="navigate" size={20} color="#6366F1" />
+                <Text style={styles.mapOverlayText}>Open in Maps</Text>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -317,17 +346,37 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     marginLeft: 8,
   },
-  mapPlaceholder: {
-    height: 150,
-    backgroundColor: '#F3F4F6',
+  mapContainer: {
+    height: 200,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+    overflow: 'hidden',
+    position: 'relative',
   },
-  mapText: {
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  mapOverlay: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  mapOverlayText: {
     fontSize: 14,
-    color: '#6B7280',
-    marginTop: 8,
+    fontWeight: '600',
+    color: '#6366F1',
+    marginLeft: 6,
   },
   hostSection: {
     flexDirection: 'row',
