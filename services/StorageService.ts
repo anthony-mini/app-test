@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const FAVORITES_KEY = '@vacation_app_favorites';
 const USER_PREFERENCES_KEY = '@vacation_app_preferences';
+const USER_PROFILE_KEY = '@vacation_app_user_profile';
 
 class StorageService {
   private static instance: StorageService;
@@ -77,6 +78,40 @@ class StorageService {
     } catch (error) {
       console.error('Error getting preferences:', error);
       return null;
+    }
+  }
+
+  async saveUserProfile(profile: UserProfile): Promise<boolean> {
+    try {
+      await AsyncStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profile));
+      return true;
+    } catch (error) {
+      console.error('Error saving user profile:', error);
+      return false;
+    }
+  }
+
+  async getUserProfile(): Promise<UserProfile | null> {
+    try {
+      const profile = await AsyncStorage.getItem(USER_PROFILE_KEY);
+      return profile ? JSON.parse(profile) : null;
+    } catch (error) {
+      console.error('Error getting user profile:', error);
+      return null;
+    }
+  }
+
+  async updateUserAvatar(avatarUri: string): Promise<boolean> {
+    try {
+      const profile = await this.getUserProfile();
+      if (profile) {
+        profile.avatar = avatarUri;
+        return await this.saveUserProfile(profile);
+      }
+      return false;
+    } catch (error) {
+      console.error('Error updating user avatar:', error);
+      return false;
     }
   }
 

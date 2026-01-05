@@ -118,7 +118,13 @@ export default function HomeScreen() {
             {userLocation ? `${userLocation.city || 'Your location'}` : 'Where do you want to go?'}
           </Text>
         </View>
-        <TouchableOpacity style={styles.profileButton}>
+        <TouchableOpacity 
+          style={styles.profileButton}
+          onPress={async () => {
+            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.push('/(vacation)/profile');
+          }}
+        >
           <Image
             source={{ uri: 'https://i.pravatar.cc/150?img=12' }}
             style={styles.profileImage}

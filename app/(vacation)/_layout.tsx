@@ -12,6 +12,7 @@ export default function VacationLayout() {
       <Stack.Screen name="home" />
       <Stack.Screen name="destination/[id]" />
       <Stack.Screen name="booking-confirmation" />
+      <Stack.Screen name="profile" />
     </Stack>
   );
 }

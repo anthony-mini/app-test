@@ -255,16 +255,92 @@ Affichage de cartes interactives avec marqueurs pour visualiser l'emplacement ex
 | **Haptic Feedback** | `expo-haptics` | Inline dans les écrans | Tous |
 | **Dark Mode** | React Native API | `Colors.ts` + `useColorScheme()` | Tous |
 | **Carte Interactive** | `react-native-maps` | MapView + Marker | Details |
+| **Caméra/Galerie** | `expo-image-picker` | `UserProfileViewModel.ts` | Profile |
+
+---
+
+## ✅ 6. Caméra / Galerie d'Images (expo-image-picker)
+
+### Description
+Accès à la caméra et à la galerie d'images pour permettre aux utilisateurs de changer leur photo de profil.
+
+### Implémentation
+- **Package**: `expo-image-picker`
+- **Permissions**: Caméra et galerie avec popups de consentement
+- **Édition**: Recadrage automatique en format carré (1:1)
+
+### Fonctionnalités
+- Prise de photo avec la caméra
+- Sélection depuis la galerie d'images
+- Demande de permissions avec alertes explicatives
+- Édition et recadrage de l'image
+- Compression de qualité (80%)
+- Sauvegarde en local storage
+- Haptic feedback lors des interactions
+
+### Permissions requises
+- **iOS**: 
+  - `NSCameraUsageDescription` - Accès à la caméra
+  - `NSPhotoLibraryUsageDescription` - Accès à la galerie
+- **Android**:
+  - `CAMERA` - Utilisation de la caméra
+  - `READ_EXTERNAL_STORAGE` - Lecture de la galerie
+  - `WRITE_EXTERNAL_STORAGE` - Sauvegarde des photos
+
+### Utilisation dans l'app
+```typescript
+// Dans UserProfileViewModel
+const pickImageFromCamera = async () => {
+  const hasPermission = await requestCameraPermission();
+  if (!hasPermission) return false;
+
+  const result = await ImagePicker.launchCameraAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.8,
+  });
+
+  if (!result.canceled) {
+    await saveProfile({ ...profile, avatar: result.assets[0].uri });
+  }
+};
+
+const pickImageFromLibrary = async () => {
+  const hasPermission = await requestMediaLibraryPermission();
+  if (!hasPermission) return false;
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.8,
+  });
+
+  if (!result.canceled) {
+    await saveProfile({ ...profile, avatar: result.assets[0].uri });
+  }
+};
+```
+
+### Popup de consentement
+L'application affiche automatiquement des popups de consentement :
+- **Première demande** : Popup système iOS/Android
+- **Permission refusée** : Alert personnalisée avec instructions
+- **Options de sélection** : Alert avec choix Caméra/Galerie/Annuler
+
+---
 
 ## 🎯 Conformité aux Exigences
 
-✅ **AU MOINS 2 fonctionnalités natives** → **5 implémentées**
+✅ **AU MOINS 2 fonctionnalités natives** → **6 implémentées**
 
 1. ✅ Géolocalisation
 2. ✅ Stockage local (AsyncStorage)
 3. ✅ Vibration (Haptic Feedback)
 4. ✅ Dark / Light mode (API système)
 5. ✅ Carte Interactive (Maps)
+6. ✅ Caméra / Galerie d'Images (Image Picker)
 
 ## 🧪 Tests
 
@@ -295,6 +371,17 @@ Affichage de cartes interactives avec marqueurs pour visualiser l'emplacement ex
 4. Zoomer et déplacer la carte
 5. Taper sur le marqueur pour voir les infos
 
+### Tester la caméra et galerie
+1. Taper sur l'avatar dans le header de la page d'accueil
+2. Accéder à la page de profil
+3. Activer le mode édition (icône crayon)
+4. Taper sur la photo de profil
+5. Choisir "Take Photo" ou "Choose from Library"
+6. Accepter les permissions si demandées
+7. Prendre/sélectionner une photo
+8. Vérifier que la photo est mise à jour
+9. Sauvegarder le profil
+
 ## 📱 Compatibilité
 
 - **iOS**: ✅ Toutes les fonctionnalités supportées
@@ -305,7 +392,7 @@ Affichage de cartes interactives avec marqueurs pour visualiser l'emplacement ex
 
 ```bash
 npm install @react-native-async-storage/async-storage expo-location
-npx expo install react-native-maps
+npx expo install react-native-maps expo-image-picker
 ```
 
 Note: `expo-haptics` est déjà inclus dans le SDK Expo.

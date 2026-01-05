@@ -40,8 +40,13 @@ L'application suit le pattern MVVM (Model-View-ViewModel) pour une séparation c
   - Bouton de réservation
   - Système de favoris avec haptic feedback
 - **Confirmation de réservation** : Feedback haptique de succès
+- **Profil utilisateur** :
+  - Modification des informations personnelles
+  - **Changement de photo de profil** : Caméra ou galerie d'images
+  - Stockage local des données de profil
+  - Popup de consentement pour les permissions
 
-## 📱 Fonctionnalités Natives (5/5 implémentées)
+## 📱 Fonctionnalités Natives (6/6 implémentées)
 
 ### 1. ✅ **Géolocalisation** (`expo-location`)
 - Demande de permissions automatique
@@ -101,6 +106,19 @@ L'application suit le pattern MVVM (Model-View-ViewModel) pour une séparation c
 - `viewmodels/DestinationViewModel.ts` - Coordonnées pour chaque destination
 - `app/(vacation)/destination/[id].tsx` - MapView avec marqueur
 
+### 6. ✅ **Caméra / Galerie d'Images** (`expo-image-picker`)
+- Sélection de photo depuis la galerie
+- Prise de photo avec la caméra
+- Demande de permissions avec popup de consentement
+- Édition et recadrage de l'image (aspect 1:1)
+- Sauvegarde de la photo de profil en local
+
+**Fichiers concernés:**
+- `models/User.ts` - Modèle de profil utilisateur étendu
+- `services/StorageService.ts` - Sauvegarde du profil
+- `viewmodels/UserProfileViewModel.ts` - Logique de sélection d'image
+- `app/(vacation)/profile.tsx` - Page de profil avec upload de photo
+
 ### 🎯 Design
 - Interface moderne et épurée
 - Couleur principale : Indigo (#6366F1)
@@ -150,6 +168,7 @@ Index (/)
 - **expo-haptics** - Feedback haptique/vibration
 - **useColorScheme** (React Native) - Détection du thème système
 - **react-native-maps** - Cartes interactives avec marqueurs
+- **expo-image-picker** - Caméra et galerie d'images
 
 ## 📦 Structure du projet
 
@@ -208,12 +227,19 @@ L'application demande les permissions suivantes :
 ```xml
 <key>NSLocationWhenInUseUsageDescription</key>
 <string>We need your location to show nearby destinations</string>
+<key>NSCameraUsageDescription</key>
+<string>We need access to your camera to take profile photos</string>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>We need access to your photo library to select profile photos</string>
 ```
 
 ### Android (AndroidManifest.xml)
 ```xml
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+<uses-permission android:name="android.permission.CAMERA" />
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 ```
 
 ## 🎯 Fonctionnalités Natives - Détails d'implémentation
@@ -266,4 +292,21 @@ const colors = Colors[colorScheme ?? 'light'];
     title={destination.name}
   />
 </MapView>
+```
+
+### Caméra / Galerie d'Images
+```typescript
+// Prendre une photo avec la caméra
+const result = await ImagePicker.launchCameraAsync({
+  allowsEditing: true,
+  aspect: [1, 1],
+  quality: 0.8,
+});
+
+// Sélectionner depuis la galerie
+const result = await ImagePicker.launchImageLibraryAsync({
+  allowsEditing: true,
+  aspect: [1, 1],
+  quality: 0.8,
+});
 ```
