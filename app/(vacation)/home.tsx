@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Dimensions,
     FlatList,
@@ -14,9 +14,12 @@ import {
     View,
     useColorScheme,
 } from 'react-native';
+import FloppyButton from '../../components/FloppyButton';
+import FloppyChat from '../../components/FloppyChat';
 import { Colors } from '../../constants/Colors';
 import { Destination } from '../../models/Destination';
 import { useDestinationViewModel } from '../../viewmodels/DestinationViewModel';
+import { useUserProfileViewModel } from '../../viewmodels/UserProfileViewModel';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.7;
@@ -38,6 +41,9 @@ export default function HomeScreen() {
     userLocation,
     refreshLocation,
   } = useDestinationViewModel();
+
+  const { profile } = useUserProfileViewModel();
+  const [isFloppyOpen, setIsFloppyOpen] = useState(false);
 
   const handleCategoryPress = async (categoryId: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -125,10 +131,16 @@ export default function HomeScreen() {
             router.push('/(vacation)/profile');
           }}
         >
-          <Image
-            source={{ uri: 'https://i.pravatar.cc/150?img=12' }}
-            style={styles.profileImage}
-          />
+          {profile.avatar ? (
+            <Image
+              source={{ uri: profile.avatar }}
+              style={styles.profileImage}
+            />
+          ) : (
+            <View style={[styles.profileImage, styles.profilePlaceholder, { backgroundColor: colors.primary }]}>
+              <Ionicons name="person" size={24} color="#fff" />
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -213,6 +225,9 @@ export default function HomeScreen() {
           ))}
         </View>
       </ScrollView>
+
+      <FloppyButton onPress={() => setIsFloppyOpen(true)} />
+      <FloppyChat isOpen={isFloppyOpen} onClose={() => setIsFloppyOpen(false)} />
     </View>
   );
 }
@@ -250,6 +265,10 @@ const styles = StyleSheet.create({
   profileImage: {
     width: '100%',
     height: '100%',
+  },
+  profilePlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   searchContainer: {
     flexDirection: 'row',

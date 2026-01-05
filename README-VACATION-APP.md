@@ -45,6 +45,12 @@ L'application suit le pattern MVVM (Model-View-ViewModel) pour une séparation c
   - **Changement de photo de profil** : Caméra ou galerie d'images
   - Stockage local des données de profil
   - Popup de consentement pour les permissions
+- **Floppy - Assistant IA** 🤖 :
+  - Chatbot conversationnel avec OpenAI
+  - Conseils de voyage personnalisés
+  - Réponses contextuelles sur les destinations
+  - Interface de chat moderne avec animations
+  - Réponses de secours si API non configurée
 
 ## 📱 Fonctionnalités Natives (6/6 implémentées)
 
@@ -132,6 +138,11 @@ L'application suit le pattern MVVM (Model-View-ViewModel) pour une séparation c
 # Installer les dépendances
 npm install
 
+# Configurer Floppy AI (optionnel)
+# 1. Copier .env.example vers .env
+# 2. Ajouter votre clé OpenAI dans .env
+# Voir FLOPPY-AI.md pour plus de détails
+
 # Lancer l'application
 npm start
 
@@ -177,28 +188,39 @@ app-test/
 ├── models/              # Modèles de données
 │   ├── Destination.ts
 │   ├── Booking.ts
-│   └── User.ts
+│   ├── User.ts
+│   └── Chat.ts          # Messages Floppy
 ├── viewmodels/          # Logique métier
 │   ├── DestinationViewModel.ts
-│   └── BookingViewModel.ts
+│   ├── BookingViewModel.ts
+│   ├── UserProfileViewModel.ts
+│   └── FloppyChatViewModel.ts  # IA conversationnelle
 ├── services/            # Services natifs
-│   ├── LocationService.ts    # Géolocalisation
-│   └── StorageService.ts     # AsyncStorage
+│   ├── LocationService.ts      # Géolocalisation
+│   ├── StorageService.ts       # AsyncStorage
+│   └── FloppyAIService.ts      # OpenAI integration
+├── components/          # Composants réutilisables
+│   ├── FloppyButton.tsx        # Bouton flottant
+│   └── FloppyChat.tsx          # Interface de chat
 ├── contexts/            # Contextes React
-│   └── ThemeContext.tsx      # Thème dark/light
+│   └── ThemeContext.tsx        # Thème dark/light
 ├── constants/           # Constantes
-│   └── Colors.ts             # Palettes de couleurs
+│   └── Colors.ts               # Palettes de couleurs
 ├── app/                 # Vues (écrans)
 │   ├── (vacation)/
 │   │   ├── onboarding.tsx
 │   │   ├── home.tsx
+│   │   ├── profile.tsx
 │   │   ├── destination/
 │   │   │   └── [id].tsx
 │   │   ├── booking-confirmation.tsx
 │   │   └── _layout.tsx
 │   ├── _layout.tsx
 │   └── index.tsx
-└── README-VACATION-APP.md
+├── .env                 # Variables d'environnement (API keys)
+├── .env.example         # Template pour .env
+├── README-VACATION-APP.md
+└── FLOPPY-AI.md        # Documentation Floppy
 ```
 
 ## 🎨 Palette de couleurs
