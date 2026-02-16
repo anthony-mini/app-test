@@ -2,19 +2,21 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-    Dimensions,
-    FlatList,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    useColorScheme,
-    View,
+  Dimensions,
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  View,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Colors } from '../../../constants/Colors';
+import { Host } from '../../../models/Host';
+import DatabaseService from '../../../services/DatabaseService';
 import { useBookingViewModel } from '../../../viewmodels/BookingViewModel';
 import { useDestinationViewModel } from '../../../viewmodels/DestinationViewModel';
 
@@ -28,8 +30,15 @@ export default function DestinationDetailScreen() {
   const { destinations, toggleFavorite, favorites } = useDestinationViewModel();
   const { createBooking } = useBookingViewModel();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [host, setHost] = useState<Host | null>(null);
 
   const destination = destinations.find((d) => d.id === id);
+
+  useEffect(() => {
+    if (destination) {
+      DatabaseService.getHostByDestinationId(destination.id).then(setHost);
+    }
+  }, [destination]);
 
   if (!destination) {
     return (
@@ -61,6 +70,11 @@ export default function DestinationDetailScreen() {
   const handleBackPress = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.back();
+  };
+
+  const handleChatPress = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push(`/(chat)/${destination.id}` as any);
   };
 
   const renderImageItem = ({ item, index }: { item: string; index: number }) => (
@@ -199,19 +213,21 @@ export default function DestinationDetailScreen() {
             </View>
           </View>
 
-          <View style={styles.hostSection}>
-            <Image
-              source={{ uri: 'https://i.pravatar.cc/150?img=8' }}
-              style={styles.hostImage}
-            />
-            <View style={styles.hostInfo}>
-              <Text style={styles.hostName}>Hosted by Sarah Johnson</Text>
-              <Text style={styles.hostDetails}>Superhost · 5 years hosting</Text>
+          {host && (
+            <View style={styles.hostSection}>
+              <Image
+                source={{ uri: host.avatar }}
+                style={styles.hostImage}
+              />
+              <View style={styles.hostInfo}>
+                <Text style={styles.hostName}>Hébergé par {host.firstName} {host.lastName}</Text>
+                <Text style={styles.hostDetails}>Hôte expérimenté</Text>
+              </View>
+              <TouchableOpacity style={styles.contactButton} onPress={handleChatPress}>
+                <Ionicons name="chatbubble-outline" size={20} color="#6366F1" />
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.contactButton}>
-              <Ionicons name="chatbubble-outline" size={20} color="#6366F1" />
-            </TouchableOpacity>
-          </View>
+          )}
         </View>
       </ScrollView>
 

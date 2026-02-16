@@ -83,11 +83,34 @@ class DatabaseService {
         FOREIGN KEY (destination_id) REFERENCES destinations(id) ON DELETE CASCADE
       );
 
+      CREATE TABLE IF NOT EXISTS hosts (
+        id TEXT PRIMARY KEY,
+        destination_id TEXT NOT NULL UNIQUE,
+        first_name TEXT NOT NULL,
+        last_name TEXT NOT NULL,
+        persona TEXT NOT NULL,
+        avatar TEXT,
+        created_at INTEGER DEFAULT (strftime('%s', 'now')),
+        FOREIGN KEY (destination_id) REFERENCES destinations(id) ON DELETE CASCADE
+      );
+
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id TEXT PRIMARY KEY,
+        destination_id TEXT NOT NULL,
+        role TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
+        content TEXT NOT NULL,
+        timestamp INTEGER DEFAULT (strftime('%s', 'now')),
+        FOREIGN KEY (destination_id) REFERENCES destinations(id) ON DELETE CASCADE
+      );
+
       CREATE INDEX IF NOT EXISTS idx_destinations_category ON destinations(category);
       CREATE INDEX IF NOT EXISTS idx_destinations_price ON destinations(price);
       CREATE INDEX IF NOT EXISTS idx_favorites_destination ON favorites(destination_id);
       CREATE INDEX IF NOT EXISTS idx_reviews_destination ON reviews(destination_id);
       CREATE INDEX IF NOT EXISTS idx_reviews_rating ON reviews(rating);
+      CREATE INDEX IF NOT EXISTS idx_hosts_destination ON hosts(destination_id);
+      CREATE INDEX IF NOT EXISTS idx_chat_messages_destination ON chat_messages(destination_id);
+      CREATE INDEX IF NOT EXISTS idx_chat_messages_timestamp ON chat_messages(timestamp);
     `);
   }
 
@@ -151,7 +174,24 @@ class DatabaseService {
       );
     }
 
-    if (__DEV__) console.log(`✅ Seeded ${destinations.length} destinations`);
+    // Générer les hôtes pour chaque destination
+    const hosts = this.generateHosts(destinationIds);
+    for (const host of hosts) {
+      await this.db.runAsync(
+        `INSERT INTO hosts (id, destination_id, first_name, last_name, persona, avatar)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          host.id,
+          host.destinationId,
+          host.firstName,
+          host.lastName,
+          host.persona,
+          host.avatar,
+        ]
+      );
+    }
+
+    if (__DEV__) console.log(`✅ Seeded ${destinations.length} destinations with hosts`);
   }
 
   private generateDestinations() {
@@ -708,6 +748,65 @@ class DatabaseService {
     return reviews;
   }
 
+  private generateHosts(destinationIds: string[]): {
+    id: string;
+    destinationId: string;
+    firstName: string;
+    lastName: string;
+    persona: string;
+    avatar: string;
+  }[] {
+    const hosts: {
+      id: string;
+      destinationId: string;
+      firstName: string;
+      lastName: string;
+      persona: string;
+      avatar: string;
+    }[] = [];
+
+    const firstNames = [
+      'Sophie', 'Marco', 'Elena', 'Lucas', 'Maria', 'Pierre', 'Isabella', 'Jean',
+      'Carmen', 'André', 'Lucia', 'François', 'Ana', 'Henri', 'Rosa', 'Michel',
+      'Gabriela', 'Antoine', 'Valentina', 'Philippe', 'Chiara', 'Laurent', 'Nina',
+      'Olivier', 'Alessia', 'Thomas', 'Camila', 'Nicolas', 'Sofia', 'Alexandre'
+    ];
+
+    const lastNames = [
+      'Dubois', 'Garcia', 'Rossi', 'Silva', 'Martinez', 'Bernard', 'Lopez', 'Moreau',
+      'Rodriguez', 'Petit', 'Fernandez', 'Blanc', 'Gonzalez', 'Rousseau', 'Santos',
+      'Vincent', 'Perez', 'Leroy', 'Costa', 'Girard', 'Alves', 'Bonnet', 'Oliveira'
+    ];
+
+    const personaTemplates = [
+      "Je suis un hôte passionné par l'hospitalité et le partage de ma région. J'adore rencontrer des voyageurs du monde entier et leur faire découvrir les trésors cachés de ma destination. Toujours disponible pour des recommandations personnalisées !",
+      "Propriétaire depuis plus de 10 ans, j'ai à cœur d'offrir une expérience authentique et mémorable. Je connais tous les meilleurs restaurants, plages secrètes et activités locales. N'hésitez pas à me demander conseil !",
+      "Ancien guide touristique reconverti dans l'hébergement, je mets mon expertise au service de mes hôtes. Je suis chaleureux, attentif aux détails et toujours prêt à rendre votre séjour inoubliable.",
+      "Passionné de voyages moi-même, je comprends l'importance d'un bon accueil. Je suis réactif, flexible et j'aime créer une atmosphère conviviale. Mon objectif : que vous vous sentiez comme chez vous !",
+      "Natif de la région, je suis fier de partager mon coin de paradis avec les visiteurs. Je privilégie les échanges authentiques et les recommandations hors des sentiers battus. Contactez-moi pour des conseils d'initiés !",
+      "Hôte expérimenté et polyglotte, j'accueille des voyageurs depuis de nombreuses années. Je suis organisé, professionnel et toujours à l'écoute. Votre confort et votre satisfaction sont ma priorité.",
+      "Amoureux de ma ville/région, je suis enthousiaste à l'idée de vous faire découvrir ses merveilles. Je suis disponible, souriant et j'adore partager mes bons plans. Bienvenue chez moi !",
+      "Hôte attentionné avec une passion pour la gastronomie locale et la culture. Je peux vous recommander les meilleures expériences culinaires et culturelles. Toujours ravi d'échanger et de vous aider !",
+    ];
+
+    destinationIds.forEach((destId, index) => {
+      const firstName = firstNames[index % firstNames.length];
+      const lastName = lastNames[index % lastNames.length];
+      const persona = personaTemplates[index % personaTemplates.length];
+      
+      hosts.push({
+        id: `host_${destId}`,
+        destinationId: destId,
+        firstName,
+        lastName,
+        persona,
+        avatar: `https://i.pravatar.cc/150?u=${firstName}${lastName}`,
+      });
+    });
+
+    return hosts;
+  }
+
   async getReviewsByDestination(destinationId: string, ratingFilter?: number) {
     if (!this.db) throw new Error('Database not initialized');
     
@@ -761,6 +860,118 @@ class DatabaseService {
         1: stats?.one_star || 0,
       },
     };
+  }
+
+  async getHostByDestinationId(destinationId: string) {
+    if (!this.db) throw new Error('Database not initialized');
+    
+    const row = await this.db.getFirstAsync<any>(
+      'SELECT * FROM hosts WHERE destination_id = ?',
+      [destinationId]
+    );
+    
+    if (!row) return null;
+
+    return {
+      id: row.id,
+      destinationId: row.destination_id,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      persona: row.persona,
+      avatar: row.avatar,
+    };
+  }
+
+  async getChatMessages(destinationId: string) {
+    if (!this.db) throw new Error('Database not initialized');
+    
+    const rows = await this.db.getAllAsync<any>(
+      'SELECT * FROM chat_messages WHERE destination_id = ? ORDER BY timestamp ASC',
+      [destinationId]
+    );
+    
+    return rows.map((row) => ({
+      id: row.id,
+      destinationId: row.destination_id,
+      role: row.role as 'user' | 'assistant',
+      content: row.content,
+      timestamp: row.timestamp,
+    }));
+  }
+
+  async saveChatMessage(
+    destinationId: string,
+    role: 'user' | 'assistant',
+    content: string
+  ): Promise<string> {
+    if (!this.db) throw new Error('Database not initialized');
+    
+    const id = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const timestamp = Math.floor(Date.now() / 1000);
+    
+    await this.db.runAsync(
+      'INSERT INTO chat_messages (id, destination_id, role, content, timestamp) VALUES (?, ?, ?, ?, ?)',
+      [id, destinationId, role, content, timestamp]
+    );
+    
+    return id;
+  }
+
+  async clearChatMessages(destinationId: string): Promise<boolean> {
+    if (!this.db) throw new Error('Database not initialized');
+    
+    try {
+      await this.db.runAsync(
+        'DELETE FROM chat_messages WHERE destination_id = ?',
+        [destinationId]
+      );
+      return true;
+    } catch (error) {
+      if (__DEV__) console.error('Error clearing chat messages:', error);
+      return false;
+    }
+  }
+
+  async getActiveConversations() {
+    if (!this.db) throw new Error('Database not initialized');
+    
+    const rows = await this.db.getAllAsync<any>(
+      `SELECT 
+        d.id as destination_id,
+        d.name as destination_name,
+        d.image_url as destination_image,
+        h.first_name as host_first_name,
+        h.last_name as host_last_name,
+        h.avatar as host_avatar,
+        cm.content as last_message,
+        cm.role as last_message_role,
+        cm.timestamp as last_message_time,
+        COUNT(cm2.id) as message_count
+       FROM chat_messages cm
+       INNER JOIN destinations d ON cm.destination_id = d.id
+       INNER JOIN hosts h ON d.id = h.destination_id
+       LEFT JOIN chat_messages cm2 ON cm.destination_id = cm2.destination_id
+       WHERE cm.timestamp = (
+         SELECT MAX(timestamp) 
+         FROM chat_messages 
+         WHERE destination_id = cm.destination_id
+       )
+       GROUP BY d.id
+       ORDER BY cm.timestamp DESC`
+    );
+    
+    return rows.map((row) => ({
+      destinationId: row.destination_id,
+      destinationName: row.destination_name,
+      destinationImage: row.destination_image,
+      hostFirstName: row.host_first_name,
+      hostLastName: row.host_last_name,
+      hostAvatar: row.host_avatar,
+      lastMessage: row.last_message,
+      lastMessageRole: row.last_message_role as 'user' | 'assistant',
+      lastMessageTime: row.last_message_time,
+      messageCount: row.message_count,
+    }));
   }
 }
 

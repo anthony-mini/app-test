@@ -4,15 +4,15 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
-  Dimensions,
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  useColorScheme,
+    Dimensions,
+    FlatList,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+    useColorScheme,
 } from 'react-native';
 import FloppyButton from '../../components/FloppyButton';
 import FloppyChat from '../../components/FloppyChat';
@@ -129,24 +129,35 @@ export default function HomeScreen() {
             {userLocation ? `${userLocation.city || 'Your location'}` : 'Where do you want to go?'}
           </Text>
         </View>
-        <TouchableOpacity 
-          style={styles.profileButton}
-          onPress={async () => {
-            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.push('/(vacation)/profile');
-          }}
-        >
-          {profile.avatar ? (
-            <Image
-              source={{ uri: profile.avatar }}
-              style={styles.profileImage}
-            />
-          ) : (
-            <View style={[styles.profileImage, styles.profilePlaceholder, { backgroundColor: colors.primary }]}>
-              <Ionicons name="person" size={24} color="#fff" />
-            </View>
-          )}
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity 
+            style={styles.messageButton}
+            onPress={async () => {
+              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/(vacation)/conversations');
+            }}
+          >
+            <Ionicons name="chatbubbles-outline" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.profileButton}
+            onPress={async () => {
+              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/(vacation)/profile');
+            }}
+          >
+            {profile.avatar ? (
+              <Image
+                source={{ uri: profile.avatar }}
+                style={styles.profileImage}
+              />
+            ) : (
+              <View style={[styles.profileImage, styles.profilePlaceholder, { backgroundColor: colors.primary }]}>
+                <Ionicons name="person" size={24} color="#fff" />
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={[styles.searchContainer, { backgroundColor: colors.card }]}>
@@ -298,6 +309,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     marginTop: 4,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  messageButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   profileButton: {
     width: 50,
