@@ -3,7 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { UserProfile } from '../models/User';
-import StorageService from '../services/StorageService';
+import DatabaseService from '../services/DatabaseService';
 
 export const useUserProfileViewModel = () => {
   const [profile, setProfile] = useState<UserProfile>({
@@ -24,7 +24,7 @@ export const useUserProfileViewModel = () => {
   const loadProfile = async () => {
     setIsLoading(true);
     try {
-      const savedProfile = await StorageService.getUserProfile();
+      const savedProfile = await DatabaseService.getUserProfile();
       if (savedProfile) {
         setProfile(savedProfile);
       }
@@ -38,7 +38,7 @@ export const useUserProfileViewModel = () => {
   const saveProfile = async (updatedProfile: UserProfile): Promise<boolean> => {
     setIsSaving(true);
     try {
-      const success = await StorageService.saveUserProfile(updatedProfile);
+      const success = await DatabaseService.saveUserProfile(updatedProfile);
       if (success) {
         setProfile(updatedProfile);
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

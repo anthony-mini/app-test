@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import FloppyButton from '../../components/FloppyButton';
 import FloppyChat from '../../components/FloppyChat';
+import SearchFilters from '../../components/SearchFilters';
 import { Colors } from '../../constants/Colors';
 import { Destination } from '../../models/Destination';
 import { useDestinationViewModel } from '../../viewmodels/DestinationViewModel';
@@ -36,14 +37,19 @@ export default function HomeScreen() {
     setSelectedCategory,
     searchQuery,
     setSearchQuery,
+    filters,
+    updateFilters,
+    resetFilters,
     toggleFavorite,
     favorites,
     userLocation,
     refreshLocation,
+    isLoading,
   } = useDestinationViewModel();
 
   const { profile } = useUserProfileViewModel();
   const [isFloppyOpen, setIsFloppyOpen] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   const handleCategoryPress = useCallback(async (categoryId: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -153,11 +159,24 @@ export default function HomeScreen() {
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
+        {isLoading && (
+          <View style={styles.loadingIndicator}>
+            <Text style={{ color: colors.textSecondary, fontSize: 12 }}>🔍</Text>
+          </View>
+        )}
+        {searchQuery.length > 0 && !isLoading && (
+          <TouchableOpacity
+            style={styles.clearButton}
+            onPress={() => setSearchQuery('')}
+          >
+            <Ionicons name="close-circle" size={20} color="#999" />
+          </TouchableOpacity>
+        )}
         <TouchableOpacity 
           style={styles.filterButton}
           onPress={async () => {
             await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            refreshLocation();
+            setIsFiltersOpen(true);
           }}
         >
           <Ionicons name="options-outline" size={20} color="#6366F1" />
@@ -241,6 +260,13 @@ export default function HomeScreen() {
 
       <FloppyButton onPress={() => setIsFloppyOpen(true)} />
       <FloppyChat isOpen={isFloppyOpen} onClose={() => setIsFloppyOpen(false)} />
+      <SearchFilters
+        visible={isFiltersOpen}
+        onClose={() => setIsFiltersOpen(false)}
+        filters={filters}
+        onApply={updateFilters}
+        onReset={resetFilters}
+      />
     </View>
   );
 }
@@ -488,5 +514,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  loadingIndicator: {
+    marginRight: 8,
+  },
+  clearButton: {
+    marginRight: 8,
   },
 });

@@ -219,6 +219,18 @@ export default function ProfileScreen() {
             style={[styles.settingItem, { backgroundColor: colors.card }]}
             onPress={async () => {
               await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/(vacation)/favorites');
+            }}
+          >
+            <Ionicons name="heart-outline" size={24} color={colors.text} />
+            <Text style={[styles.settingText, { color: colors.text }]}>My Favorites</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.settingItem, { backgroundColor: colors.card }]}
+            onPress={async () => {
+              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             }}
           >
             <Ionicons name="notifications-outline" size={24} color={colors.text} />
