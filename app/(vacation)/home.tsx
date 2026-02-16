@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -65,9 +65,12 @@ export default function HomeScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // Le ViewModel recharge automatiquement les données
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+    // Force le rechargement en réinitialisant la recherche
+    setSearchQuery('');
+    setSelectedCategory('all');
+    // Petit délai pour laisser le ViewModel se mettre à jour
+    setTimeout(() => setRefreshing(false), 500);
+  }, [setSearchQuery, setSelectedCategory]);
 
   const renderCategoryItem = useCallback(({ item }: any) => (
     <TouchableOpacity
@@ -129,6 +132,42 @@ export default function HomeScreen() {
     </TouchableOpacity>
   ), [router, handleFavoritePress, favorites]);
 
+  const renderRecommendedCard = useCallback(({ item }: { item: Destination }) => (
+    <TouchableOpacity
+      style={styles.recommendedCard}
+      onPress={() => router.push(`/(vacation)/destination/${item.id}`)}
+    >
+      <Image source={{ uri: item.imageUrl }} style={styles.recommendedImage} />
+      <View style={styles.recommendedInfo}>
+        <Text style={styles.recommendedName}>{item.name}</Text>
+        <View style={styles.locationRow}>
+          <Ionicons name="location-outline" size={12} color="#666" />
+          <Text style={styles.recommendedLocation}>
+            {item.location}, {item.country}
+          </Text>
+        </View>
+        <View style={styles.recommendedBottom}>
+          <View style={styles.ratingContainer}>
+            <Ionicons name="star" size={12} color="#FFD700" />
+            <Text style={styles.ratingText}>{item.rating}</Text>
+          </View>
+          <Text style={styles.priceText}>${item.price}/night</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  ), [router]);
+
+  const recommendedData = useMemo(() => destinations.slice(0, 2), [destinations]);
+
+  // Prefetch des images pour les premières destinations
+  useEffect(() => {
+    if (destinations.length > 0) {
+      destinations.slice(0, 3).forEach(dest => {
+        Image.prefetch(dest.imageUrl);
+      });
+    }
+  }, [destinations]);
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.card }]}>
@@ -180,7 +219,7 @@ export default function HomeScreen() {
         />
         {isLoading && (
           <View style={styles.loadingIndicator}>
-            <Text style={{ color: colors.textSecondary, fontSize: 12 }}>🔍</Text>
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>🔍</Text>
           </View>
         )}
         {searchQuery.length > 0 && !isLoading && (
@@ -265,31 +304,15 @@ export default function HomeScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recommended for You</Text>
-          {destinations.slice(0, 2).map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.recommendedCard}
-              onPress={() => router.push(`/(vacation)/destination/${item.id}`)}
-            >
-              <Image source={{ uri: item.imageUrl }} style={styles.recommendedImage} />
-              <View style={styles.recommendedInfo}>
-                <Text style={styles.recommendedName}>{item.name}</Text>
-                <View style={styles.locationRow}>
-                  <Ionicons name="location-outline" size={12} color="#666" />
-                  <Text style={styles.recommendedLocation}>
-                    {item.location}, {item.country}
-                  </Text>
-                </View>
-                <View style={styles.recommendedBottom}>
-                  <View style={styles.ratingContainer}>
-                    <Ionicons name="star" size={12} color="#FFD700" />
-                    <Text style={styles.ratingText}>{item.rating}</Text>
-                  </View>
-                  <Text style={styles.priceText}>${item.price}/night</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
+          <FlatList
+            data={recommendedData}
+            renderItem={renderRecommendedCard}
+            keyExtractor={(item) => item.id}
+            scrollEnabled={false}
+            removeClippedSubviews
+            initialNumToRender={2}
+            maxToRenderPerBatch={2}
+          />
         </View>
       </ScrollView>
 
@@ -565,6 +588,9 @@ const styles = StyleSheet.create({
   },
   loadingIndicator: {
     marginRight: 8,
+  },
+  loadingText: {
+    fontSize: 12,
   },
   clearButton: {
     marginRight: 8,
