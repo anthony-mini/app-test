@@ -4,14 +4,14 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Dimensions,
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useColorScheme,
-  View,
+    Dimensions,
+    FlatList,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    useColorScheme,
+    View,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Colors } from '../../../constants/Colors';
@@ -127,11 +127,24 @@ export default function DestinationDetailScreen() {
                 </Text>
               </View>
             </View>
-            <View style={styles.ratingBox}>
+            <TouchableOpacity
+              style={styles.ratingBox}
+              onPress={async () => {
+                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push({
+                  pathname: '/(vacation)/reviews',
+                  params: {
+                    destinationId: destination.id,
+                    destinationName: destination.name,
+                  },
+                });
+              }}
+              activeOpacity={0.7}
+            >
               <Ionicons name="star" size={20} color="#FFD700" />
               <Text style={styles.ratingLarge}>{destination.rating}</Text>
               <Text style={styles.reviewCount}>({destination.reviewCount})</Text>
-            </View>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.section}>

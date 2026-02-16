@@ -4,6 +4,15 @@ const FAVORITES_KEY = '@vacation_app_favorites';
 const USER_PREFERENCES_KEY = '@vacation_app_preferences';
 const USER_PROFILE_KEY = '@vacation_app_user_profile';
 
+interface UserProfile {
+  name: string;
+  email: string;
+  phone?: string;
+  avatar?: string;
+  bio?: string;
+  location?: string;
+}
+
 class StorageService {
   private static instance: StorageService;
 

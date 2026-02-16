@@ -72,9 +72,22 @@ class DatabaseService {
         UNIQUE(destination_id)
       );
 
+      CREATE TABLE IF NOT EXISTS reviews (
+        id TEXT PRIMARY KEY,
+        destination_id TEXT NOT NULL,
+        user_name TEXT NOT NULL,
+        user_avatar TEXT,
+        rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
+        comment TEXT NOT NULL,
+        created_at INTEGER DEFAULT (strftime('%s', 'now')),
+        FOREIGN KEY (destination_id) REFERENCES destinations(id) ON DELETE CASCADE
+      );
+
       CREATE INDEX IF NOT EXISTS idx_destinations_category ON destinations(category);
       CREATE INDEX IF NOT EXISTS idx_destinations_price ON destinations(price);
       CREATE INDEX IF NOT EXISTS idx_favorites_destination ON favorites(destination_id);
+      CREATE INDEX IF NOT EXISTS idx_reviews_destination ON reviews(destination_id);
+      CREATE INDEX IF NOT EXISTS idx_reviews_rating ON reviews(rating);
     `);
   }
 
@@ -91,8 +104,10 @@ class DatabaseService {
     }
 
     const destinations = this.generateDestinations();
+    const destinationIds: string[] = [];
     
     for (const dest of destinations) {
+      destinationIds.push(dest.id);
       await this.db.runAsync(
         `INSERT INTO destinations (
           id, name, location, country, rating, review_count, price, currency,
@@ -114,6 +129,24 @@ class DatabaseService {
           dest.category,
           dest.coordinates.latitude,
           dest.coordinates.longitude,
+        ]
+      );
+    }
+
+    // Générer les reviews pour chaque destination
+    const reviews = this.generateReviews(destinationIds);
+    for (const review of reviews) {
+      await this.db.runAsync(
+        `INSERT INTO reviews (id, destination_id, user_name, user_avatar, rating, comment, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          review.id,
+          review.destinationId,
+          review.userName,
+          review.userAvatar,
+          review.rating,
+          review.comment,
+          review.createdAt,
         ]
       );
     }
@@ -287,11 +320,19 @@ class DatabaseService {
     if (!this.db) throw new Error('Database not initialized');
     
     if (category === 'all') {
-      return this.getAllDestinations();
+      return this.searchDestinations('', {});
     }
 
     const rows = await this.db.getAllAsync<any>(
-      'SELECT * FROM destinations WHERE category = ? ORDER BY rating DESC',
+      `SELECT 
+        d.*,
+        COALESCE(AVG(r.rating), d.rating) as actual_rating,
+        COUNT(r.id) as actual_review_count
+       FROM destinations d
+       LEFT JOIN reviews r ON d.id = r.destination_id
+       WHERE d.category = ?
+       GROUP BY d.id
+       ORDER BY actual_rating DESC`,
       [category]
     );
     
@@ -300,8 +341,8 @@ class DatabaseService {
       name: row.name,
       location: row.location,
       country: row.country,
-      rating: row.rating,
-      reviewCount: row.review_count,
+      rating: parseFloat(row.actual_rating.toFixed(1)),
+      reviewCount: row.actual_review_count,
       price: row.price,
       currency: row.currency,
       imageUrl: row.image_url,
@@ -331,66 +372,76 @@ class DatabaseService {
   ) {
     if (!this.db) throw new Error('Database not initialized');
     
-    let sql = 'SELECT * FROM destinations WHERE 1=1';
+    let sql = `
+      SELECT 
+        d.*,
+        COALESCE(AVG(r.rating), d.rating) as actual_rating,
+        COUNT(r.id) as actual_review_count
+      FROM destinations d
+      LEFT JOIN reviews r ON d.id = r.destination_id
+      WHERE 1=1
+    `;
     const params: any[] = [];
 
     // Recherche textuelle intelligente
     if (query && query.trim()) {
       const searchQuery = `%${query.toLowerCase()}%`;
       sql += ` AND (
-        LOWER(name) LIKE ? 
-        OR LOWER(location) LIKE ? 
-        OR LOWER(country) LIKE ?
-        OR LOWER(description) LIKE ?
+        LOWER(d.name) LIKE ? 
+        OR LOWER(d.location) LIKE ? 
+        OR LOWER(d.country) LIKE ?
+        OR LOWER(d.description) LIKE ?
       )`;
       params.push(searchQuery, searchQuery, searchQuery, searchQuery);
     }
 
     // Filtre catégorie
     if (filters?.category && filters.category !== 'all') {
-      sql += ' AND category = ?';
+      sql += ' AND d.category = ?';
       params.push(filters.category);
     }
 
     // Filtre prix
     if (filters?.minPrice !== undefined) {
-      sql += ' AND price >= ?';
+      sql += ' AND d.price >= ?';
       params.push(filters.minPrice);
     }
     if (filters?.maxPrice !== undefined) {
-      sql += ' AND price <= ?';
+      sql += ' AND d.price <= ?';
       params.push(filters.maxPrice);
-    }
-
-    // Filtre rating
-    if (filters?.minRating !== undefined) {
-      sql += ' AND rating >= ?';
-      params.push(filters.minRating);
     }
 
     // Filtre amenities (recherche JSON)
     if (filters?.amenities && filters.amenities.length > 0) {
-      const amenityConditions = filters.amenities.map(() => 'amenities LIKE ?').join(' AND ');
+      const amenityConditions = filters.amenities.map(() => 'd.amenities LIKE ?').join(' AND ');
       sql += ` AND (${amenityConditions})`;
       filters.amenities.forEach(amenity => {
         params.push(`%"${amenity}"%`);
       });
     }
 
+    sql += ' GROUP BY d.id';
+
+    // Filtre rating (après GROUP BY)
+    if (filters?.minRating !== undefined) {
+      sql += ' HAVING actual_rating >= ?';
+      params.push(filters.minRating);
+    }
+
     // Tri
     switch (filters?.sortBy) {
       case 'price_asc':
-        sql += ' ORDER BY price ASC';
+        sql += ' ORDER BY d.price ASC';
         break;
       case 'price_desc':
-        sql += ' ORDER BY price DESC';
+        sql += ' ORDER BY d.price DESC';
         break;
       case 'name':
-        sql += ' ORDER BY name ASC';
+        sql += ' ORDER BY d.name ASC';
         break;
       case 'rating':
       default:
-        sql += ' ORDER BY rating DESC, review_count DESC';
+        sql += ' ORDER BY actual_rating DESC, actual_review_count DESC';
         break;
     }
 
@@ -401,8 +452,8 @@ class DatabaseService {
       name: row.name,
       location: row.location,
       country: row.country,
-      rating: row.rating,
-      reviewCount: row.review_count,
+      rating: parseFloat(row.actual_rating.toFixed(1)),
+      reviewCount: row.actual_review_count,
       price: row.price,
       currency: row.currency,
       imageUrl: row.image_url,
@@ -423,7 +474,14 @@ class DatabaseService {
     if (!this.db) throw new Error('Database not initialized');
     
     const row = await this.db.getFirstAsync<any>(
-      'SELECT * FROM destinations WHERE id = ?',
+      `SELECT 
+        d.*,
+        COALESCE(AVG(r.rating), d.rating) as actual_rating,
+        COUNT(r.id) as actual_review_count
+       FROM destinations d
+       LEFT JOIN reviews r ON d.id = r.destination_id
+       WHERE d.id = ?
+       GROUP BY d.id`,
       [id]
     );
     
@@ -434,8 +492,8 @@ class DatabaseService {
       name: row.name,
       location: row.location,
       country: row.country,
-      rating: row.rating,
-      reviewCount: row.review_count,
+      rating: parseFloat(row.actual_rating.toFixed(1)),
+      reviewCount: row.actual_review_count,
       price: row.price,
       currency: row.currency,
       imageUrl: row.image_url,
@@ -556,6 +614,153 @@ class DatabaseService {
       if (__DEV__) console.error('Error updating avatar:', error);
       return false;
     }
+  }
+
+  private generateReviews(destinationIds: string[]): {
+    id: string;
+    destinationId: string;
+    userName: string;
+    userAvatar: string;
+    rating: number;
+    comment: string;
+    createdAt: number;
+  }[] {
+    const reviews: {
+      id: string;
+      destinationId: string;
+      userName: string;
+      userAvatar: string;
+      rating: number;
+      comment: string;
+      createdAt: number;
+    }[] = [];
+    const userNames = [
+      'Sarah Johnson', 'Michael Chen', 'Emma Williams', 'David Martinez', 'Sophie Anderson',
+      'James Brown', 'Olivia Taylor', 'Lucas Garcia', 'Isabella Rodriguez', 'Noah Wilson',
+      'Ava Thompson', 'Ethan Moore', 'Mia Jackson', 'Alexander Lee', 'Charlotte Harris',
+      'William Clark', 'Amelia Lewis', 'Benjamin Walker', 'Harper Hall', 'Daniel Allen'
+    ];
+
+    const comments = {
+      5: [
+        'Absolutely amazing experience! Everything was perfect from start to finish.',
+        'Best vacation ever! The place exceeded all our expectations.',
+        'Stunning location with incredible amenities. Highly recommend!',
+        'Perfect getaway! Will definitely come back again.',
+        'Outstanding service and beautiful surroundings. 5 stars!',
+      ],
+      4: [
+        'Great place with minor room for improvement. Overall very satisfied.',
+        'Really enjoyed our stay. Good value for money.',
+        'Nice location and friendly staff. Would recommend.',
+        'Very good experience, just a few small issues.',
+        'Lovely place, almost perfect!',
+      ],
+      3: [
+        'Decent place, met our basic expectations.',
+        'Average experience. Nothing special but okay.',
+        'Good location but some facilities need updating.',
+        'Fair value. Some aspects were good, others not so much.',
+        'Acceptable stay, could be better.',
+      ],
+      2: [
+        'Disappointed with several aspects. Not worth the price.',
+        'Below expectations. Several issues during our stay.',
+        'Not as advertised. Needs significant improvements.',
+        'Poor service and maintenance issues.',
+        'Would not recommend. Many problems.',
+      ],
+      1: [
+        'Terrible experience. Do not book!',
+        'Worst vacation ever. Complete waste of money.',
+        'Horrible conditions and terrible service.',
+        'Avoid at all costs. Major issues throughout.',
+        'Extremely disappointed. Nothing worked as promised.',
+      ],
+    };
+
+    // Générer 3-8 reviews par destination
+    destinationIds.forEach((destId) => {
+      const reviewCount = Math.floor(Math.random() * 6) + 3; // 3 à 8 reviews
+      
+      for (let i = 0; i < reviewCount; i++) {
+        const rating = Math.floor(Math.random() * 5) + 1; // 1 à 5
+        const userName = userNames[Math.floor(Math.random() * userNames.length)];
+        const commentList = comments[rating as keyof typeof comments];
+        const comment = commentList[Math.floor(Math.random() * commentList.length)];
+        
+        // Date aléatoire dans les 6 derniers mois
+        const daysAgo = Math.floor(Math.random() * 180);
+        const createdAt = Math.floor(Date.now() / 1000) - (daysAgo * 24 * 60 * 60);
+        
+        reviews.push({
+          id: `review_${destId}_${i}`,
+          destinationId: destId,
+          userName,
+          userAvatar: `https://i.pravatar.cc/150?u=${userName}`,
+          rating,
+          comment,
+          createdAt,
+        });
+      }
+    });
+
+    return reviews;
+  }
+
+  async getReviewsByDestination(destinationId: string, ratingFilter?: number) {
+    if (!this.db) throw new Error('Database not initialized');
+    
+    let sql = 'SELECT * FROM reviews WHERE destination_id = ?';
+    const params: any[] = [destinationId];
+    
+    if (ratingFilter) {
+      sql += ' AND rating = ?';
+      params.push(ratingFilter);
+    }
+    
+    sql += ' ORDER BY created_at DESC';
+    
+    const rows = await this.db.getAllAsync<any>(sql, params);
+    
+    return rows.map((row) => ({
+      id: row.id,
+      destinationId: row.destination_id,
+      userName: row.user_name,
+      userAvatar: row.user_avatar,
+      rating: row.rating,
+      comment: row.comment,
+      createdAt: row.created_at,
+    }));
+  }
+
+  async getReviewStats(destinationId: string) {
+    if (!this.db) throw new Error('Database not initialized');
+    
+    const stats = await this.db.getFirstAsync<any>(
+      `SELECT 
+        COUNT(*) as total,
+        AVG(rating) as average,
+        SUM(CASE WHEN rating = 5 THEN 1 ELSE 0 END) as five_star,
+        SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END) as four_star,
+        SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) as three_star,
+        SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) as two_star,
+        SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as one_star
+       FROM reviews WHERE destination_id = ?`,
+      [destinationId]
+    );
+    
+    return {
+      total: stats?.total || 0,
+      average: stats?.average || 0,
+      distribution: {
+        5: stats?.five_star || 0,
+        4: stats?.four_star || 0,
+        3: stats?.three_star || 0,
+        2: stats?.two_star || 0,
+        1: stats?.one_star || 0,
+      },
+    };
   }
 }
 

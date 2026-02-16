@@ -13,18 +13,19 @@ export const useDestinationViewModel = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
-  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     // Paralléliser les chargements pour éviter les waterfalls
     Promise.all([
-      loadDestinations(),
+      loadDestinations(), 
       loadCategories(),
       loadFavorites(),
       loadUserLocation(),
     ]).catch((error) => {
       if (__DEV__) console.error('Error loading initial data:', error);
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadFavorites = async () => {
