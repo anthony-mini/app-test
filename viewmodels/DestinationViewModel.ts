@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Destination, DestinationCategory } from '../models/Destination';
 import LocationService, { UserLocation } from '../services/LocationService';
 import StorageService from '../services/StorageService';
@@ -13,10 +13,15 @@ export const useDestinationViewModel = () => {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
 
   useEffect(() => {
-    loadDestinations();
-    loadCategories();
-    loadFavorites();
-    loadUserLocation();
+    // Paralléliser les chargements pour éviter les waterfalls
+    Promise.all([
+      loadDestinations(),
+      loadCategories(),
+      loadFavorites(),
+      loadUserLocation(),
+    ]).catch((error) => {
+      console.error('Error loading initial data:', error);
+    });
   }, []);
 
   const loadFavorites = async () => {
@@ -146,13 +151,15 @@ export const useDestinationViewModel = () => {
     setCategories(mockCategories);
   };
 
-  const filteredDestinations = destinations.filter((dest) => {
-    const matchesCategory = selectedCategory === 'all' || dest.category === selectedCategory;
-    const matchesSearch = dest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         dest.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         dest.country.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const filteredDestinations = useMemo(() => {
+    return destinations.filter((dest) => {
+      const matchesCategory = selectedCategory === 'all' || dest.category === selectedCategory;
+      const matchesSearch = dest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           dest.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           dest.country.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [destinations, selectedCategory, searchQuery]);
 
   const toggleFavorite = async (destinationId: string) => {
     const isFavorite = favorites.has(destinationId);

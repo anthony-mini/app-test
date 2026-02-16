@@ -1,18 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
-    Dimensions,
-    FlatList,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-    useColorScheme,
+  Dimensions,
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  useColorScheme,
 } from 'react-native';
 import FloppyButton from '../../components/FloppyButton';
 import FloppyChat from '../../components/FloppyChat';
@@ -45,17 +45,17 @@ export default function HomeScreen() {
   const { profile } = useUserProfileViewModel();
   const [isFloppyOpen, setIsFloppyOpen] = useState(false);
 
-  const handleCategoryPress = async (categoryId: string) => {
+  const handleCategoryPress = useCallback(async (categoryId: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedCategory(categoryId);
-  };
+  }, [setSelectedCategory]);
 
-  const handleFavoritePress = async (destinationId: string) => {
+  const handleFavoritePress = useCallback(async (destinationId: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     toggleFavorite(destinationId);
-  };
+  }, [toggleFavorite]);
 
-  const renderCategoryItem = ({ item }: any) => (
+  const renderCategoryItem = useCallback(({ item }: any) => (
     <TouchableOpacity
       style={[
         styles.categoryCard,
@@ -74,9 +74,9 @@ export default function HomeScreen() {
         {item.name}
       </Text>
     </TouchableOpacity>
-  );
+  ), [colors.card, colors.primary, colors.text, selectedCategory, handleCategoryPress]);
 
-  const renderDestinationCard = ({ item }: { item: Destination }) => (
+  const renderDestinationCard = useCallback(({ item }: { item: Destination }) => (
     <TouchableOpacity
       style={styles.destinationCard}
       onPress={() => router.push(`/(vacation)/destination/${item.id}`)}
@@ -113,7 +113,7 @@ export default function HomeScreen() {
         </View>
       </View>
     </TouchableOpacity>
-  );
+  ), [router, handleFavoritePress, favorites]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -174,6 +174,10 @@ export default function HomeScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.categoriesList}
+            removeClippedSubviews
+            maxToRenderPerBatch={5}
+            initialNumToRender={5}
+            windowSize={5}
           />
         </View>
 
@@ -193,6 +197,15 @@ export default function HomeScreen() {
             contentContainerStyle={styles.destinationsList}
             snapToInterval={CARD_WIDTH + 16}
             decelerationRate="fast"
+            removeClippedSubviews
+            maxToRenderPerBatch={3}
+            initialNumToRender={2}
+            windowSize={3}
+            getItemLayout={(data, index) => ({
+              length: CARD_WIDTH + 16,
+              offset: (CARD_WIDTH + 16) * index,
+              index,
+            })}
           />
         </View>
 
