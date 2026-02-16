@@ -135,6 +135,11 @@ class DatabaseService {
       { name: 'Seychelles Beach Villa', location: 'Victoria', country: 'Seychelles', lat: -4.6796, lng: 55.4920, price: 480, img: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482' },
       { name: 'Fiji Island Resort', location: 'Nadi', country: 'Fiji', lat: -17.7765, lng: 177.4417, price: 390, img: 'https://images.unsplash.com/photo-1571757767119-68b8dbed8c97' },
       { name: 'Amalfi Coast House', location: 'Positano', country: 'Italy', lat: 40.6280, lng: 14.4850, price: 350, img: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64' },
+      { name: 'Hawaii Beach Villa', location: 'Maui', country: 'USA', lat: 20.7984, lng: -156.3319, price: 420, img: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19' },
+      { name: 'Costa Rica Beach', location: 'Tamarindo', country: 'Costa Rica', lat: 10.2988, lng: -85.8391, price: 195, img: 'https://images.unsplash.com/photo-1621277224630-81a3e6f6e8f7' },
+      { name: 'Zanzibar Resort', location: 'Nungwi', country: 'Tanzania', lat: -5.7263, lng: 39.2903, price: 310, img: 'https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f' },
+      { name: 'Barbados Beach House', location: 'Bridgetown', country: 'Barbados', lat: 13.0969, lng: -59.6145, price: 380, img: 'https://images.unsplash.com/photo-1580541631950-7282082b53ce' },
+      { name: 'Mauritius Paradise', location: 'Grand Baie', country: 'Mauritius', lat: -20.0105, lng: 57.5801, price: 440, img: 'https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f' },
     ];
 
     const mountainDestinations = [
@@ -148,6 +153,11 @@ class DatabaseService {
       { name: 'Interlaken Chalet', location: 'Interlaken', country: 'Switzerland', lat: 46.6863, lng: 7.8632, price: 330, img: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7' },
       { name: 'Queenstown Villa', location: 'Queenstown', country: 'New Zealand', lat: -45.0312, lng: 168.6626, price: 370, img: 'https://images.unsplash.com/photo-1589802829985-817e51171b92' },
       { name: 'Innsbruck Lodge', location: 'Innsbruck', country: 'Austria', lat: 47.2692, lng: 11.4041, price: 270, img: 'https://images.unsplash.com/photo-1551632811-561732d1e306' },
+      { name: 'Himalaya Retreat', location: 'Manali', country: 'India', lat: 32.2396, lng: 77.1887, price: 140, img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23' },
+      { name: 'Rocky Mountains Cabin', location: 'Estes Park', country: 'USA', lat: 40.3772, lng: -105.5217, price: 295, img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b' },
+      { name: 'Andes Mountain Lodge', location: 'Cusco', country: 'Peru', lat: -13.5319, lng: -71.9675, price: 175, img: 'https://images.unsplash.com/photo-1526392060635-9d6019884377' },
+      { name: 'Pyrenees Chalet', location: 'Andorra la Vella', country: 'Andorra', lat: 42.5063, lng: 1.5218, price: 245, img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4' },
+      { name: 'Carpathian Lodge', location: 'Zakopane', country: 'Poland', lat: 49.2992, lng: 19.9496, price: 165, img: 'https://images.unsplash.com/photo-1605540436563-5bca919ae766' },
     ];
 
     const cityDestinations = [
@@ -161,6 +171,16 @@ class DatabaseService {
       { name: 'Rome Apartment', location: 'Trastevere', country: 'Italy', lat: 41.9028, lng: 12.4964, price: 220, img: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5' },
       { name: 'Amsterdam Canal House', location: 'Jordaan', country: 'Netherlands', lat: 52.3676, lng: 4.8852, price: 240, img: 'https://images.unsplash.com/photo-1534351590666-13e3e96b5017' },
       { name: 'Berlin Loft', location: 'Kreuzberg', country: 'Germany', lat: 52.5200, lng: 13.4050, price: 180, img: 'https://images.unsplash.com/photo-1560969184-10fe8719e047' },
+      { name: 'Sydney Apartment', location: 'Darling Harbour', country: 'Australia', lat: -33.8688, lng: 151.2093, price: 310, img: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9' },
+      { name: 'Hong Kong Suite', location: 'Central', country: 'Hong Kong', lat: 22.2783, lng: 114.1747, price: 420, img: 'https://images.unsplash.com/photo-1536599018102-9f803c140fc1' },
+      { name: 'Istanbul Flat', location: 'Beyoğlu', country: 'Turkey', lat: 41.0082, lng: 28.9784, price: 165, img: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200' },
+      { name: 'Seoul Hotel', location: 'Gangnam', country: 'South Korea', lat: 37.5665, lng: 126.9780, price: 195, img: 'https://images.unsplash.com/photo-1601024445121-e5b82f020549' },
+      { name: 'Prague Apartment', location: 'Old Town', country: 'Czech Republic', lat: 50.0755, lng: 14.4378, price: 175, img: 'https://images.unsplash.com/photo-1541849546-216549ae216d' },
+      { name: 'Lisbon Loft', location: 'Alfama', country: 'Portugal', lat: 38.7223, lng: -9.1393, price: 210, img: 'https://images.unsplash.com/photo-1585208798174-6cedd86e019a' },
+      { name: 'Vienna Suite', location: 'Innere Stadt', country: 'Austria', lat: 48.2082, lng: 16.3738, price: 265, img: 'https://images.unsplash.com/photo-1516550893923-42d28e5677af' },
+      { name: 'Copenhagen Flat', location: 'Nyhavn', country: 'Denmark', lat: 55.6761, lng: 12.5683, price: 305, img: 'https://images.unsplash.com/photo-1513622470522-26c3c8a854bc' },
+      { name: 'Stockholm Apartment', location: 'Gamla Stan', country: 'Sweden', lat: 59.3293, lng: 18.0686, price: 285, img: 'https://images.unsplash.com/photo-1509356843151-3e7d96241e11' },
+      { name: 'Buenos Aires Loft', location: 'Palermo', country: 'Argentina', lat: -34.6037, lng: -58.3816, price: 155, img: 'https://images.unsplash.com/photo-1589909202802-8f4aadce1849' },
     ];
 
     const countrysideDestinations = [
@@ -174,6 +194,16 @@ class DatabaseService {
       { name: 'Alentejo Farm', location: 'Évora', country: 'Portugal', lat: 38.5714, lng: -7.9087, price: 170, img: 'https://images.unsplash.com/photo-1587974928442-77dc3e0dba72' },
       { name: 'Vermont Farmhouse', location: 'Stowe', country: 'USA', lat: 44.4654, lng: -72.6874, price: 200, img: 'https://images.unsplash.com/photo-1564501049412-61c2a3083791' },
       { name: 'Lake District Cottage', location: 'Windermere', country: 'UK', lat: 54.3800, lng: -2.9080, price: 210, img: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d' },
+      { name: 'Andalusia Finca', location: 'Ronda', country: 'Spain', lat: 36.7423, lng: -5.1676, price: 215, img: 'https://images.unsplash.com/photo-1568084680786-a84f91d1153c' },
+      { name: 'Umbria Villa', location: 'Assisi', country: 'Italy', lat: 43.0708, lng: 12.6172, price: 255, img: 'https://images.unsplash.com/photo-1566073771259-6a8506099945' },
+      { name: 'Douro Valley Estate', location: 'Peso da Régua', country: 'Portugal', lat: 41.1638, lng: -7.7875, price: 280, img: 'https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f' },
+      { name: 'Normandy Farmhouse', location: 'Honfleur', country: 'France', lat: 49.4186, lng: 0.2330, price: 235, img: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a' },
+      { name: 'Sonoma Ranch', location: 'Healdsburg', country: 'USA', lat: 38.6102, lng: -122.8694, price: 350, img: 'https://images.unsplash.com/photo-1560184897-ae75f418493e' },
+      { name: 'Bavaria Cottage', location: 'Garmisch', country: 'Germany', lat: 47.4924, lng: 11.0955, price: 225, img: 'https://images.unsplash.com/photo-1564501049412-61c2a3083791' },
+      { name: 'Welsh Farmhouse', location: 'Snowdonia', country: 'Wales', lat: 53.0685, lng: -3.9247, price: 185, img: 'https://images.unsplash.com/photo-1590004953392-5aba2e72269a' },
+      { name: 'Oregon Ranch', location: 'Willamette Valley', country: 'USA', lat: 44.8458, lng: -123.1107, price: 265, img: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb' },
+      { name: 'Dordogne Villa', location: 'Sarlat', country: 'France', lat: 44.8912, lng: 1.2161, price: 295, img: 'https://images.unsplash.com/photo-1584738766473-61c083514bf4' },
+      { name: 'New Zealand Farm', location: 'Wanaka', country: 'New Zealand', lat: -44.7034, lng: 169.1322, price: 240, img: 'https://images.unsplash.com/photo-1589802829985-817e51171b92' },
     ];
 
     const allLocations = [

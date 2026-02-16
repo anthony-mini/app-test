@@ -43,7 +43,6 @@ export default function HomeScreen() {
     toggleFavorite,
     favorites,
     userLocation,
-    refreshLocation,
     isLoading,
   } = useDestinationViewModel();
 
@@ -203,7 +202,12 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Popular Destinations</Text>
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={async () => {
+                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/(vacation)/all-destinations');
+              }}
+            >
               <Text style={styles.seeAllText}>See all</Text>
             </TouchableOpacity>
           </View>
