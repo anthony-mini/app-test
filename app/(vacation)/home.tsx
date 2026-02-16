@@ -4,15 +4,16 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
-    Dimensions,
-    FlatList,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-    useColorScheme,
+  Dimensions,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  useColorScheme,
 } from 'react-native';
 import FloppyButton from '../../components/FloppyButton';
 import FloppyChat from '../../components/FloppyChat';
@@ -49,6 +50,7 @@ export default function HomeScreen() {
   const { profile } = useUserProfileViewModel();
   const [isFloppyOpen, setIsFloppyOpen] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const handleCategoryPress = useCallback(async (categoryId: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -59,6 +61,13 @@ export default function HomeScreen() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     toggleFavorite(destinationId);
   }, [toggleFavorite]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Le ViewModel recharge automatiquement les données
+    setTimeout(() => setRefreshing(false), 1000);
+  }, []);
 
   const renderCategoryItem = useCallback(({ item }: any) => (
     <TouchableOpacity
@@ -193,7 +202,18 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        style={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+      >
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Categories</Text>
           <FlatList

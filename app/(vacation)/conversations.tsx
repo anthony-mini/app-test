@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Stack, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -29,6 +30,7 @@ export default function ConversationsScreen() {
   const router = useRouter();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadConversations();
@@ -45,6 +47,12 @@ export default function ConversationsScreen() {
       setIsLoading(false);
     }
   };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadConversations();
+    setRefreshing(false);
+  }, []);
 
   const formatTime = (timestamp: number) => {
     const now = Date.now() / 1000;
@@ -132,6 +140,14 @@ export default function ConversationsScreen() {
             keyExtractor={(item) => item.destinationId}
             contentContainerStyle={styles.listContent}
             ItemSeparatorComponent={() => <View style={styles.separator} />}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor="#6366F1"
+                colors={['#6366F1']}
+              />
+            }
           />
         )}
       </View>

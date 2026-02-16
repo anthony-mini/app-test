@@ -1,5 +1,5 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
@@ -12,8 +12,12 @@ import DatabaseService from '@/services/DatabaseService';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const pathname = usePathname();
   const [isDbReady, setIsDbReady] = useState(false);
   const { showAd, closeAd } = useAdBanner();
+  
+  // Ne pas afficher la pub sur l'écran d'onboarding
+  const shouldShowAd = showAd && !pathname.includes('onboarding');
 
   useEffect(() => {
     DatabaseService.initialize()
@@ -42,7 +46,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
-      {showAd && <AdBanner onClose={closeAd} />}
+      {shouldShowAd && <AdBanner onClose={closeAd} />}
       <StatusBar style="auto" />
     </ThemeProvider>
   );
