@@ -13,7 +13,8 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
+import DateRangePicker from '../../../components/DateRangePicker';
 import { Colors } from '../../../constants/Colors';
 import { Host } from '../../../models/Host';
 import DatabaseService from '../../../services/DatabaseService';
@@ -31,6 +32,13 @@ export default function DestinationDetailScreen() {
   const { createBooking } = useBookingViewModel();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [host, setHost] = useState<Host | null>(null);
+  const [isCalendarVisible, setIsCalendarVisible] = useState(false);
+  const [selectedDates, setSelectedDates] = useState<{
+    startDate: string;
+    endDate: string;
+    nights: number;
+    totalPrice: number;
+  } | null>(null);
 
   const destination = destinations.find((d) => d.id === id);
 
@@ -48,12 +56,33 @@ export default function DestinationDetailScreen() {
     );
   }
 
+  const handleSelectDates = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setIsCalendarVisible(true);
+  };
+
+  const handleDateConfirm = (startDate: string, endDate: string, nights: number) => {
+    setSelectedDates({
+      startDate,
+      endDate,
+      nights,
+      totalPrice: nights * destination.price,
+    });
+    setIsCalendarVisible(false);
+  };
+
   const handleBookNow = async () => {
+    if (!selectedDates) {
+      // Si pas de dates sélectionnées, ouvrir le calendrier
+      setIsCalendarVisible(true);
+      return;
+    }
+
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const success = await createBooking({
       destinationId: destination.id,
-      checkInDate: new Date(),
-      checkOutDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      checkInDate: new Date(selectedDates.startDate),
+      checkOutDate: new Date(selectedDates.endDate),
       guests: 2,
     });
 
@@ -182,7 +211,6 @@ export default function DestinationDetailScreen() {
             <View style={styles.mapContainer}>
               <MapView
                 style={styles.map}
-                provider={PROVIDER_GOOGLE}
                 initialRegion={{
                   latitude: destination.coordinates.latitude,
                   longitude: destination.coordinates.longitude,
@@ -213,6 +241,33 @@ export default function DestinationDetailScreen() {
             </View>
           </View>
 
+          <View style={styles.bookingSection}>
+            <Text style={styles.sectionTitle}>Réservation</Text>
+            <TouchableOpacity style={styles.dateSelector} onPress={handleSelectDates}>
+              <View style={styles.dateSelectorContent}>
+                <Ionicons name="calendar-outline" size={24} color="#6366F1" />
+                <View style={styles.dateSelectorText}>
+                  {selectedDates ? (
+                    <>
+                      <Text style={styles.dateSelectorLabel}>
+                        {new Date(selectedDates.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - {new Date(selectedDates.endDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      </Text>
+                      <Text style={styles.dateSelectorValue}>
+                        {selectedDates.nights} {selectedDates.nights > 1 ? 'nuits' : 'nuit'} • ${selectedDates.totalPrice}
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <Text style={styles.dateSelectorLabel}>Sélectionner les dates</Text>
+                      <Text style={styles.dateSelectorValue}>Choisir vos dates de séjour</Text>
+                    </>
+                  )}
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+          </View>
+
           {host && (
             <View style={styles.hostSection}>
               <Image
@@ -233,16 +288,27 @@ export default function DestinationDetailScreen() {
 
       <View style={[styles.footer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
         <View style={styles.priceContainer}>
-          <Text style={styles.priceLabel}>Price</Text>
+          <Text style={styles.priceLabel}>
+            {selectedDates ? 'Total' : 'Prix'}
+          </Text>
           <Text style={styles.priceAmount}>
-            ${destination.price}
-            <Text style={styles.priceUnit}> /night</Text>
+            ${selectedDates ? selectedDates.totalPrice : destination.price}
+            {!selectedDates && <Text style={styles.priceUnit}> /nuit</Text>}
           </Text>
         </View>
         <TouchableOpacity style={styles.bookButton} onPress={handleBookNow}>
-          <Text style={styles.bookButtonText}>Book Now</Text>
+          <Text style={styles.bookButtonText}>
+            {selectedDates ? 'Réserver' : 'Choisir les dates'}
+          </Text>
         </TouchableOpacity>
       </View>
+
+      <DateRangePicker
+        visible={isCalendarVisible}
+        onClose={() => setIsCalendarVisible(false)}
+        onConfirm={handleDateConfirm}
+        pricePerNight={destination.price}
+      />
     </View>
   );
 }
@@ -406,6 +472,38 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#6366F1',
     marginLeft: 6,
+  },
+  bookingSection: {
+    marginBottom: 24,
+  },
+  dateSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  dateSelectorContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  dateSelectorText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  dateSelectorLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  dateSelectorValue: {
+    fontSize: 14,
+    color: '#6B7280',
   },
   hostSection: {
     flexDirection: 'row',
