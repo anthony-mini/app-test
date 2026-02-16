@@ -62,7 +62,7 @@ class LocationService {
 
       return this.currentLocation;
     } catch (error) {
-      console.error('Error getting current location:', error);
+      if (__DEV__) console.error('Error getting current location:', error);
       return null;
     }
   }

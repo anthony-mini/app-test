@@ -9,7 +9,14 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.apptest.vacation",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "We need your location to show nearby destinations and personalize your experience",
+        "NSCameraUsageDescription": "We need access to your camera to take profile photos",
+        "NSPhotoLibraryUsageDescription": "We need access to your photo library to select profile photos",
+        "NSPhotoLibraryAddUsageDescription": "We need permission to save photos to your library"
+      }
     },
     "android": {
       "adaptiveIcon": {

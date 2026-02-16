@@ -21,7 +21,7 @@ class StorageService {
       await AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
       return true;
     } catch (error) {
-      console.error('Error saving favorites:', error);
+      if (__DEV__) console.error('Error saving favorites:', error);
       return false;
     }
   }
@@ -31,7 +31,7 @@ class StorageService {
       const favorites = await AsyncStorage.getItem(FAVORITES_KEY);
       return favorites ? JSON.parse(favorites) : [];
     } catch (error) {
-      console.error('Error getting favorites:', error);
+      if (__DEV__) console.error('Error loading favorites:', error);
       return [];
     }
   }
@@ -45,7 +45,7 @@ class StorageService {
       }
       return true;
     } catch (error) {
-      console.error('Error adding favorite:', error);
+      if (__DEV__) console.error('Error adding favorite:', error);
       return false;
     }
   }
@@ -56,7 +56,7 @@ class StorageService {
       const updatedFavorites = favorites.filter((id) => id !== destinationId);
       return await this.saveFavorites(updatedFavorites);
     } catch (error) {
-      console.error('Error removing favorite:', error);
+      if (__DEV__) console.error('Error removing favorite:', error);
       return false;
     }
   }
@@ -66,7 +66,7 @@ class StorageService {
       await AsyncStorage.setItem(USER_PREFERENCES_KEY, JSON.stringify(preferences));
       return true;
     } catch (error) {
-      console.error('Error saving preferences:', error);
+      if (__DEV__) console.error('Error saving preferences:', error);
       return false;
     }
   }
@@ -76,7 +76,7 @@ class StorageService {
       const preferences = await AsyncStorage.getItem(USER_PREFERENCES_KEY);
       return preferences ? JSON.parse(preferences) : null;
     } catch (error) {
-      console.error('Error getting preferences:', error);
+      if (__DEV__) console.error('Error getting preferences:', error);
       return null;
     }
   }
@@ -86,7 +86,7 @@ class StorageService {
       await AsyncStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profile));
       return true;
     } catch (error) {
-      console.error('Error saving user profile:', error);
+      if (__DEV__) console.error('Error saving profile:', error);
       return false;
     }
   }

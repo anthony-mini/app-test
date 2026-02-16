@@ -20,7 +20,7 @@ export const useDestinationViewModel = () => {
       loadFavorites(),
       loadUserLocation(),
     ]).catch((error) => {
-      console.error('Error loading initial data:', error);
+      if (__DEV__) console.error('Error loading initial data:', error);
     });
   }, []);
 
@@ -134,7 +134,7 @@ export const useDestinationViewModel = () => {
       ];
       setDestinations(mockDestinations);
     } catch (error) {
-      console.error('Error loading destinations:', error);
+      if (__DEV__) console.error('Error loading destinations:', error);
     } finally {
       setIsLoading(false);
     }

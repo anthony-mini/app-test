@@ -29,7 +29,7 @@ export const useUserProfileViewModel = () => {
         setProfile(savedProfile);
       }
     } catch (error) {
-      console.error('Error loading profile:', error);
+      if (__DEV__) console.error('Error loading profile:', error);
     } finally {
       setIsLoading(false);
     }
@@ -46,7 +46,7 @@ export const useUserProfileViewModel = () => {
       }
       return false;
     } catch (error) {
-      console.error('Error saving profile:', error);
+      if (__DEV__) console.error('Error saving profile:', error);
       return false;
     } finally {
       setIsSaving(false);

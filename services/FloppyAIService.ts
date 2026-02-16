@@ -1,5 +1,13 @@
 import { OPENAI_API_KEY } from '@env';
-import OpenAI from 'openai';
+
+// Lazy load OpenAI pour réduire le bundle initial
+let OpenAI: any = null;
+const loadOpenAI = async () => {
+  if (!OpenAI) {
+    OpenAI = (await import('openai')).default;
+  }
+  return OpenAI;
+};
 
 interface Message {
   role: 'system' | 'user' | 'assistant';
@@ -8,7 +16,7 @@ interface Message {
 
 class FloppyAIService {
   private static instance: FloppyAIService;
-  private openai: OpenAI | null = null;
+  private openai: any = null;
   private conversationHistory: Message[] = [];
 
   private readonly SYSTEM_PROMPT = `Tu es Floppy, un assistant de voyage IA sympathique et enthousiaste pour l'application "Vacation Booking". 
@@ -54,16 +62,17 @@ IMPORTANT:
     return FloppyAIService.instance;
   }
 
-  private initializeOpenAI() {
+  private async initializeOpenAI() {
     if (!OPENAI_API_KEY || OPENAI_API_KEY === 'your_openai_api_key_here' || OPENAI_API_KEY === '') {
-      console.warn('⚠️ OpenAI API key not configured. Floppy will use fallback responses.');
+      if (__DEV__) console.warn('⚠️ OpenAI API key not configured. Floppy will use fallback responses.');
       return;
     }
     
-    console.log('✅ OpenAI API key loaded successfully');
+    if (__DEV__) console.log('✅ OpenAI API key loaded successfully');
 
     try {
-      this.openai = new OpenAI({
+      const OpenAIClass = await loadOpenAI();
+      this.openai = new OpenAIClass({
         apiKey: OPENAI_API_KEY,
       });
       this.conversationHistory = [
@@ -73,7 +82,7 @@ IMPORTANT:
         },
       ];
     } catch (error) {
-      console.error('Error initializing OpenAI:', error);
+      if (__DEV__) console.error('Error initializing OpenAI:', error);
     }
   }
 
@@ -112,7 +121,7 @@ IMPORTANT:
 
       return assistantMessage;
     } catch (error) {
-      console.error('Error calling OpenAI:', error);
+      if (__DEV__) console.error('Error calling OpenAI:', error);
       return this.getFallbackResponse(userMessage);
     }
   }
