@@ -15,6 +15,7 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 import FloppyButton from '../../components/FloppyButton';
 import FloppyChat from '../../components/FloppyChat';
 import SearchFilters from '../../components/SearchFilters';
@@ -300,6 +301,58 @@ export default function HomeScreen() {
               index,
             })}
           />
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Explore Map</Text>
+            <TouchableOpacity
+              onPress={async () => {
+                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/(vacation)/interactive-map');
+              }}
+            >
+              <Text style={styles.seeAllText}>Full Screen</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.mapContainer}>
+            <MapView
+              style={styles.mapPreview}
+              initialRegion={{
+                latitude: 46.8182,
+                longitude: 8.2275,
+                latitudeDelta: 15,
+                longitudeDelta: 15,
+              }}
+              scrollEnabled={false}
+              zoomEnabled={false}
+              rotateEnabled={false}
+              pitchEnabled={false}
+            >
+              {destinations.slice(0, 10).map((destination) => (
+                <Marker
+                  key={destination.id}
+                  coordinate={{
+                    latitude: destination.coordinates.latitude,
+                    longitude: destination.coordinates.longitude,
+                  }}
+                />
+              ))}
+            </MapView>
+            <TouchableOpacity
+              style={styles.mapOverlay}
+              onPress={async () => {
+                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                router.push('/(vacation)/interactive-map');
+              }}
+              activeOpacity={0.9}
+            >
+              <View style={styles.mapOverlayContent}>
+                <Ionicons name="expand-outline" size={24} color="#FFF" />
+                <Text style={styles.mapOverlayText}>Voir la carte interactive</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -594,5 +647,35 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     marginRight: 8,
+  },
+  mapContainer: {
+    marginHorizontal: 20,
+    height: 200,
+    borderRadius: 16,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  mapPreview: {
+    width: '100%',
+    height: '100%',
+  },
+  mapOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mapOverlayContent: {
+    alignItems: 'center',
+  },
+  mapOverlayText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 8,
   },
 });
