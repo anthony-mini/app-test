@@ -10,6 +10,7 @@ export default function VacationLayout() {
     >
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="home" />
+      <Stack.Screen name="conversations" options={{ headerShown: true }} />
       <Stack.Screen name="destination/[id]" />
       <Stack.Screen name="booking-confirmation" />
       <Stack.Screen name="profile" />

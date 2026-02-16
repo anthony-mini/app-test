@@ -1,17 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
-    Image,
     ScrollView,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     useColorScheme,
-    View,
+    View
 } from 'react-native';
 import { Colors } from '../../constants/Colors';
 import { useUserProfileViewModel } from '../../viewmodels/UserProfileViewModel';
@@ -215,6 +215,18 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Settings</Text>
           
+          <TouchableOpacity
+            style={[styles.settingItem, { backgroundColor: colors.card }]}
+            onPress={async () => {
+              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/(vacation)/favorites');
+            }}
+          >
+            <Ionicons name="heart-outline" size={24} color={colors.text} />
+            <Text style={[styles.settingText, { color: colors.text }]}>My Favorites</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={[styles.settingItem, { backgroundColor: colors.card }]}
             onPress={async () => {

@@ -1,26 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Destination, DestinationCategory } from '../models/Destination';
+import { DEFAULT_FILTERS, SearchFilters } from '../models/SearchFilters';
+import DatabaseService from '../services/DatabaseService';
 import LocationService, { UserLocation } from '../services/LocationService';
-import StorageService from '../services/StorageService';
 
 export const useDestinationViewModel = () => {
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [categories, setCategories] = useState<DestinationCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
-    loadDestinations();
-    loadCategories();
-    loadFavorites();
-    loadUserLocation();
+    // Paralléliser les chargements pour éviter les waterfalls
+    Promise.all([
+      loadDestinations(), 
+      loadCategories(),
+      loadFavorites(),
+      loadUserLocation(),
+    ]).catch((error) => {
+      if (__DEV__) console.error('Error loading initial data:', error);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadFavorites = async () => {
-    const savedFavorites = await StorageService.getFavorites();
+    const savedFavorites = await DatabaseService.getFavorites();
     setFavorites(new Set(savedFavorites));
   };
 
@@ -32,104 +41,10 @@ export const useDestinationViewModel = () => {
   const loadDestinations = async () => {
     setIsLoading(true);
     try {
-      const mockDestinations: Destination[] = [
-        {
-          id: '1',
-          name: 'Bali Beach Resort',
-          location: 'Seminyak',
-          country: 'Indonesia',
-          rating: 4.8,
-          reviewCount: 234,
-          price: 150,
-          currency: 'USD',
-          imageUrl: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800',
-          images: [
-            'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800',
-            'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800',
-          ],
-          description: 'Experience luxury beachfront living with stunning ocean views and world-class amenities.',
-          amenities: ['WiFi', 'Pool', 'Beach Access', 'Restaurant', 'Spa'],
-          category: 'beach',
-          isFavorite: false,
-          availableDates: [],
-          coordinates: {
-            latitude: -8.6705,
-            longitude: 115.2126,
-          },
-        },
-        {
-          id: '2',
-          name: 'Swiss Alps Chalet',
-          location: 'Zermatt',
-          country: 'Switzerland',
-          rating: 4.9,
-          reviewCount: 189,
-          price: 280,
-          currency: 'USD',
-          imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
-          images: [
-            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
-          ],
-          description: 'Cozy mountain retreat with breathtaking alpine views and ski-in/ski-out access.',
-          amenities: ['WiFi', 'Fireplace', 'Ski Storage', 'Hot Tub', 'Mountain View'],
-          category: 'mountain',
-          isFavorite: false,
-          availableDates: [],
-          coordinates: {
-            latitude: 45.9763,
-            longitude: 7.6586,
-          },
-        },
-        {
-          id: '3',
-          name: 'Tokyo City Hotel',
-          location: 'Shibuya',
-          country: 'Japan',
-          rating: 4.7,
-          reviewCount: 456,
-          price: 120,
-          currency: 'USD',
-          imageUrl: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800',
-          images: [
-            'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800',
-          ],
-          description: 'Modern hotel in the heart of Tokyo with easy access to shopping and entertainment.',
-          amenities: ['WiFi', 'Gym', 'Restaurant', 'Bar', 'City View'],
-          category: 'city',
-          isFavorite: false,
-          availableDates: [],
-          coordinates: {
-            latitude: 35.6762,
-            longitude: 139.6503,
-          },
-        },
-        {
-          id: '4',
-          name: 'Santorini Villa',
-          location: 'Oia',
-          country: 'Greece',
-          rating: 5.0,
-          reviewCount: 312,
-          price: 320,
-          currency: 'USD',
-          imageUrl: 'https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?w=800',
-          images: [
-            'https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?w=800',
-          ],
-          description: 'Iconic white-washed villa with infinity pool and stunning caldera views.',
-          amenities: ['WiFi', 'Private Pool', 'Sea View', 'Terrace', 'Kitchen'],
-          category: 'beach',
-          isFavorite: false,
-          availableDates: [],
-          coordinates: {
-            latitude: 36.4618,
-            longitude: 25.3753,
-          },
-        },
-      ];
-      setDestinations(mockDestinations);
+      const dbDestinations = await DatabaseService.getDestinationsByCategory(selectedCategory);
+      setDestinations(dbDestinations);
     } catch (error) {
-      console.error('Error loading destinations:', error);
+      if (__DEV__) console.error('Error loading destinations:', error);
     } finally {
       setIsLoading(false);
     }
@@ -146,21 +61,53 @@ export const useDestinationViewModel = () => {
     setCategories(mockCategories);
   };
 
-  const filteredDestinations = destinations.filter((dest) => {
-    const matchesCategory = selectedCategory === 'all' || dest.category === selectedCategory;
-    const matchesSearch = dest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         dest.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         dest.country.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const performSearch = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const results = await DatabaseService.searchDestinations(searchQuery, {
+        category: selectedCategory,
+        minPrice: filters.minPrice,
+        maxPrice: filters.maxPrice,
+        minRating: filters.minRating,
+        amenities: filters.amenities,
+        sortBy: filters.sortBy,
+      });
+      setDestinations(results);
+    } catch (error) {
+      if (__DEV__) console.error('Error searching destinations:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchQuery, selectedCategory, filters]);
+
+  // Debounce de la recherche (300ms)
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    searchTimeoutRef.current = setTimeout(() => {
+      performSearch();
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery, selectedCategory, filters, performSearch]);
+
+  const filteredDestinations = useMemo(() => {
+    return destinations;
+  }, [destinations]);
 
   const toggleFavorite = async (destinationId: string) => {
     const isFavorite = favorites.has(destinationId);
     
     if (isFavorite) {
-      await StorageService.removeFavorite(destinationId);
+      await DatabaseService.removeFavorite(destinationId);
     } else {
-      await StorageService.addFavorite(destinationId);
+      await DatabaseService.addFavorite(destinationId);
     }
 
     setFavorites((prev) => {
@@ -180,6 +127,14 @@ export const useDestinationViewModel = () => {
     );
   };
 
+  const updateFilters = (newFilters: Partial<SearchFilters>) => {
+    setFilters((prev) => ({ ...prev, ...newFilters }));
+  };
+
+  const resetFilters = () => {
+    setFilters(DEFAULT_FILTERS);
+  };
+
   return {
     destinations: filteredDestinations,
     categories,
@@ -187,10 +142,14 @@ export const useDestinationViewModel = () => {
     setSelectedCategory,
     searchQuery,
     setSearchQuery,
-    isLoading,
-    favorites,
+    filters,
+    updateFilters,
+    resetFilters,
     toggleFavorite,
+    favorites,
     userLocation,
     refreshLocation: loadUserLocation,
+    isLoading,
+    resultsCount: destinations.length,
   };
 };

@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
     Dimensions,
     FlatList,
-    Image,
     ScrollView,
     StyleSheet,
     Text,
@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import FloppyButton from '../../components/FloppyButton';
 import FloppyChat from '../../components/FloppyChat';
+import SearchFilters from '../../components/SearchFilters';
 import { Colors } from '../../constants/Colors';
 import { Destination } from '../../models/Destination';
 import { useDestinationViewModel } from '../../viewmodels/DestinationViewModel';
@@ -36,26 +37,30 @@ export default function HomeScreen() {
     setSelectedCategory,
     searchQuery,
     setSearchQuery,
+    filters,
+    updateFilters,
+    resetFilters,
     toggleFavorite,
     favorites,
     userLocation,
-    refreshLocation,
+    isLoading,
   } = useDestinationViewModel();
 
   const { profile } = useUserProfileViewModel();
   const [isFloppyOpen, setIsFloppyOpen] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
-  const handleCategoryPress = async (categoryId: string) => {
+  const handleCategoryPress = useCallback(async (categoryId: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedCategory(categoryId);
-  };
+  }, [setSelectedCategory]);
 
-  const handleFavoritePress = async (destinationId: string) => {
+  const handleFavoritePress = useCallback(async (destinationId: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     toggleFavorite(destinationId);
-  };
+  }, [toggleFavorite]);
 
-  const renderCategoryItem = ({ item }: any) => (
+  const renderCategoryItem = useCallback(({ item }: any) => (
     <TouchableOpacity
       style={[
         styles.categoryCard,
@@ -74,9 +79,9 @@ export default function HomeScreen() {
         {item.name}
       </Text>
     </TouchableOpacity>
-  );
+  ), [colors.card, colors.primary, colors.text, selectedCategory, handleCategoryPress]);
 
-  const renderDestinationCard = ({ item }: { item: Destination }) => (
+  const renderDestinationCard = useCallback(({ item }: { item: Destination }) => (
     <TouchableOpacity
       style={styles.destinationCard}
       onPress={() => router.push(`/(vacation)/destination/${item.id}`)}
@@ -113,7 +118,7 @@ export default function HomeScreen() {
         </View>
       </View>
     </TouchableOpacity>
-  );
+  ), [router, handleFavoritePress, favorites]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -124,24 +129,35 @@ export default function HomeScreen() {
             {userLocation ? `${userLocation.city || 'Your location'}` : 'Where do you want to go?'}
           </Text>
         </View>
-        <TouchableOpacity 
-          style={styles.profileButton}
-          onPress={async () => {
-            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.push('/(vacation)/profile');
-          }}
-        >
-          {profile.avatar ? (
-            <Image
-              source={{ uri: profile.avatar }}
-              style={styles.profileImage}
-            />
-          ) : (
-            <View style={[styles.profileImage, styles.profilePlaceholder, { backgroundColor: colors.primary }]}>
-              <Ionicons name="person" size={24} color="#fff" />
-            </View>
-          )}
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity 
+            style={styles.messageButton}
+            onPress={async () => {
+              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/(vacation)/conversations');
+            }}
+          >
+            <Ionicons name="chatbubbles-outline" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.profileButton}
+            onPress={async () => {
+              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/(vacation)/profile');
+            }}
+          >
+            {profile.avatar ? (
+              <Image
+                source={{ uri: profile.avatar }}
+                style={styles.profileImage}
+              />
+            ) : (
+              <View style={[styles.profileImage, styles.profilePlaceholder, { backgroundColor: colors.primary }]}>
+                <Ionicons name="person" size={24} color="#fff" />
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={[styles.searchContainer, { backgroundColor: colors.card }]}>
@@ -153,11 +169,24 @@ export default function HomeScreen() {
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
+        {isLoading && (
+          <View style={styles.loadingIndicator}>
+            <Text style={{ color: colors.textSecondary, fontSize: 12 }}>🔍</Text>
+          </View>
+        )}
+        {searchQuery.length > 0 && !isLoading && (
+          <TouchableOpacity
+            style={styles.clearButton}
+            onPress={() => setSearchQuery('')}
+          >
+            <Ionicons name="close-circle" size={20} color="#999" />
+          </TouchableOpacity>
+        )}
         <TouchableOpacity 
           style={styles.filterButton}
           onPress={async () => {
             await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            refreshLocation();
+            setIsFiltersOpen(true);
           }}
         >
           <Ionicons name="options-outline" size={20} color="#6366F1" />
@@ -174,13 +203,22 @@ export default function HomeScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.categoriesList}
+            removeClippedSubviews
+            maxToRenderPerBatch={5}
+            initialNumToRender={5}
+            windowSize={5}
           />
         </View>
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Popular Destinations</Text>
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={async () => {
+                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/(vacation)/all-destinations');
+              }}
+            >
               <Text style={styles.seeAllText}>See all</Text>
             </TouchableOpacity>
           </View>
@@ -193,6 +231,15 @@ export default function HomeScreen() {
             contentContainerStyle={styles.destinationsList}
             snapToInterval={CARD_WIDTH + 16}
             decelerationRate="fast"
+            removeClippedSubviews
+            maxToRenderPerBatch={3}
+            initialNumToRender={2}
+            windowSize={3}
+            getItemLayout={(data, index) => ({
+              length: CARD_WIDTH + 16,
+              offset: (CARD_WIDTH + 16) * index,
+              index,
+            })}
           />
         </View>
 
@@ -228,6 +275,13 @@ export default function HomeScreen() {
 
       <FloppyButton onPress={() => setIsFloppyOpen(true)} />
       <FloppyChat isOpen={isFloppyOpen} onClose={() => setIsFloppyOpen(false)} />
+      <SearchFilters
+        visible={isFiltersOpen}
+        onClose={() => setIsFiltersOpen(false)}
+        filters={filters}
+        onApply={updateFilters}
+        onReset={resetFilters}
+      />
     </View>
   );
 }
@@ -255,6 +309,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     marginTop: 4,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  messageButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   profileButton: {
     width: 50,
@@ -475,5 +542,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  loadingIndicator: {
+    marginRight: 8,
+  },
+  clearButton: {
+    marginRight: 8,
   },
 });
