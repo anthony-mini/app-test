@@ -1,5 +1,5 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -7,6 +7,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
   StyleSheet,
   Text,
   TextInput,
@@ -22,6 +23,7 @@ export default function ChatScreen() {
   const router = useRouter();
   const { destinationId } = useLocalSearchParams<{ destinationId: string }>();
   const [inputText, setInputText] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   const {
@@ -64,6 +66,12 @@ export default function ChatScreen() {
       ]
     );
   };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    // Les messages sont déjà chargés, juste simuler un refresh
+    setTimeout(() => setRefreshing(false), 500);
+  }, []);
 
   const renderMessage = ({ item }: { item: ChatMessage }) => {
     const isUser = item.role === 'user';
@@ -158,6 +166,14 @@ export default function ChatScreen() {
           renderItem={renderMessage}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.messagesList}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#6366F1"
+              colors={['#6366F1']}
+            />
+          }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>

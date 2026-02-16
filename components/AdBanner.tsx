@@ -90,6 +90,7 @@ export default function AdBanner({ onClose }: AdBannerProps) {
         style={[styles.ctaButton, { backgroundColor: colors.primary }]}
         onPress={async () => {
           await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          handleClose();
           router.push('/(adv)/offer-details');
         }}
         activeOpacity={0.8}

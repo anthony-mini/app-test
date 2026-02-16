@@ -2,18 +2,20 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-    Dimensions,
-    FlatList,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-    useColorScheme,
+  Dimensions,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  useColorScheme,
 } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 import FloppyButton from '../../components/FloppyButton';
 import FloppyChat from '../../components/FloppyChat';
 import SearchFilters from '../../components/SearchFilters';
@@ -49,6 +51,7 @@ export default function HomeScreen() {
   const { profile } = useUserProfileViewModel();
   const [isFloppyOpen, setIsFloppyOpen] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const handleCategoryPress = useCallback(async (categoryId: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -59,6 +62,16 @@ export default function HomeScreen() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     toggleFavorite(destinationId);
   }, [toggleFavorite]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Force le rechargement en réinitialisant la recherche
+    setSearchQuery('');
+    setSelectedCategory('all');
+    // Petit délai pour laisser le ViewModel se mettre à jour
+    setTimeout(() => setRefreshing(false), 500);
+  }, [setSearchQuery, setSelectedCategory]);
 
   const renderCategoryItem = useCallback(({ item }: any) => (
     <TouchableOpacity
@@ -120,6 +133,42 @@ export default function HomeScreen() {
     </TouchableOpacity>
   ), [router, handleFavoritePress, favorites]);
 
+  const renderRecommendedCard = useCallback(({ item }: { item: Destination }) => (
+    <TouchableOpacity
+      style={styles.recommendedCard}
+      onPress={() => router.push(`/(vacation)/destination/${item.id}`)}
+    >
+      <Image source={{ uri: item.imageUrl }} style={styles.recommendedImage} />
+      <View style={styles.recommendedInfo}>
+        <Text style={styles.recommendedName}>{item.name}</Text>
+        <View style={styles.locationRow}>
+          <Ionicons name="location-outline" size={12} color="#666" />
+          <Text style={styles.recommendedLocation}>
+            {item.location}, {item.country}
+          </Text>
+        </View>
+        <View style={styles.recommendedBottom}>
+          <View style={styles.ratingContainer}>
+            <Ionicons name="star" size={12} color="#FFD700" />
+            <Text style={styles.ratingText}>{item.rating}</Text>
+          </View>
+          <Text style={styles.priceText}>${item.price}/night</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  ), [router]);
+
+  const recommendedData = useMemo(() => destinations.slice(0, 2), [destinations]);
+
+  // Prefetch des images pour les premières destinations
+  useEffect(() => {
+    if (destinations.length > 0) {
+      destinations.slice(0, 3).forEach(dest => {
+        Image.prefetch(dest.imageUrl);
+      });
+    }
+  }, [destinations]);
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.card }]}>
@@ -171,7 +220,7 @@ export default function HomeScreen() {
         />
         {isLoading && (
           <View style={styles.loadingIndicator}>
-            <Text style={{ color: colors.textSecondary, fontSize: 12 }}>🔍</Text>
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>🔍</Text>
           </View>
         )}
         {searchQuery.length > 0 && !isLoading && (
@@ -193,7 +242,18 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        style={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+      >
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Categories</Text>
           <FlatList
@@ -244,32 +304,68 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recommended for You</Text>
-          {destinations.slice(0, 2).map((item) => (
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Explore Map</Text>
             <TouchableOpacity
-              key={item.id}
-              style={styles.recommendedCard}
-              onPress={() => router.push(`/(vacation)/destination/${item.id}`)}
+              onPress={async () => {
+                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/(vacation)/interactive-map');
+              }}
             >
-              <Image source={{ uri: item.imageUrl }} style={styles.recommendedImage} />
-              <View style={styles.recommendedInfo}>
-                <Text style={styles.recommendedName}>{item.name}</Text>
-                <View style={styles.locationRow}>
-                  <Ionicons name="location-outline" size={12} color="#666" />
-                  <Text style={styles.recommendedLocation}>
-                    {item.location}, {item.country}
-                  </Text>
-                </View>
-                <View style={styles.recommendedBottom}>
-                  <View style={styles.ratingContainer}>
-                    <Ionicons name="star" size={12} color="#FFD700" />
-                    <Text style={styles.ratingText}>{item.rating}</Text>
-                  </View>
-                  <Text style={styles.priceText}>${item.price}/night</Text>
-                </View>
+              <Text style={styles.seeAllText}>Full Screen</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.mapContainer}>
+            <MapView
+              style={styles.mapPreview}
+              initialRegion={{
+                latitude: 46.8182,
+                longitude: 8.2275,
+                latitudeDelta: 15,
+                longitudeDelta: 15,
+              }}
+              scrollEnabled={false}
+              zoomEnabled={false}
+              rotateEnabled={false}
+              pitchEnabled={false}
+            >
+              {destinations.slice(0, 10).map((destination) => (
+                <Marker
+                  key={destination.id}
+                  coordinate={{
+                    latitude: destination.coordinates.latitude,
+                    longitude: destination.coordinates.longitude,
+                  }}
+                />
+              ))}
+            </MapView>
+            <TouchableOpacity
+              style={styles.mapOverlay}
+              onPress={async () => {
+                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                router.push('/(vacation)/interactive-map');
+              }}
+              activeOpacity={0.9}
+            >
+              <View style={styles.mapOverlayContent}>
+                <Ionicons name="expand-outline" size={24} color="#FFF" />
+                <Text style={styles.mapOverlayText}>Voir la carte interactive</Text>
               </View>
             </TouchableOpacity>
-          ))}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Recommended for You</Text>
+          <FlatList
+            data={recommendedData}
+            renderItem={renderRecommendedCard}
+            keyExtractor={(item) => item.id}
+            scrollEnabled={false}
+            removeClippedSubviews
+            initialNumToRender={2}
+            maxToRenderPerBatch={2}
+          />
         </View>
       </ScrollView>
 
@@ -546,7 +642,40 @@ const styles = StyleSheet.create({
   loadingIndicator: {
     marginRight: 8,
   },
+  loadingText: {
+    fontSize: 12,
+  },
   clearButton: {
     marginRight: 8,
+  },
+  mapContainer: {
+    marginHorizontal: 20,
+    height: 200,
+    borderRadius: 16,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  mapPreview: {
+    width: '100%',
+    height: '100%',
+  },
+  mapOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mapOverlayContent: {
+    alignItems: 'center',
+  },
+  mapOverlayText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 8,
   },
 });
