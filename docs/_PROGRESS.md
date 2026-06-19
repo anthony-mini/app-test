@@ -17,7 +17,7 @@ Plan source : `/Users/anthonymini/.claude/plans/elegant-plotting-newt.md`
 - [x] R1 — `README.md` (FR) réécrit : accroche+badges, 8 captures, vidéo, fonctionnalités, archi+C4 embarqué, choix techniques, démarrage, structure, notes. Balises parasites nettoyées.
 - [x] D1 — `docs/DEMO-SCRIPT.md` : chapitrage vidéo + couverture des 7 exigences + addendum CRUD optionnel.
 - [x] M1 — 8 captures extraites de la vidéo et câblées dans README + DEMO-SCRIPT ; lien vidéo = placeholder `[LIEN_VIDEO]` (à héberger, .mov trop lourd).
-- [ ] X1 — Docs existantes consolidées dans `docs/`
+- [x] X1 — Docs consolidées dans `docs/` : NATIVE-FEATURES déplacé, README-VACATION→LEGACY-README (note archive), FLOPPY-AI+CHAT_FEATURE fusionnés en AI-FEATURES (config OpenAI réconciliée). Liens ajoutés au README. Racine = README.md seul.
 - [ ] V1 — Vérif finale : `tsc --noEmit` OK, `expo lint` OK, Mermaid valide, DoD couverte
 
 ## Journal

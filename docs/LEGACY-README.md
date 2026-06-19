@@ -1,5 +1,7 @@
 # Vacation Booking Mobile App
 
+> ⚠️ **Document historique (archivé).** Ceci est l'ancien README du projet, conservé pour référence. La documentation à jour et faisant autorité se trouve dans le [README principal](../README.md) et les fichiers du dossier `docs/`.
+
 Une application mobile de réservation de vacances construite avec React Native, Expo et une architecture MVVM.
 
 ## 🏗️ Architecture MVVM

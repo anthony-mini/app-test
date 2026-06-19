@@ -255,10 +255,21 @@ app-test/
 ├── constants/
 │   └── Colors.ts                     # Palettes clair / sombre
 │
-└── docs/
+└── docs/                            # Documentation détaillée
     ├── ARCHITECTURE.md               # 3 niveaux C4 + diagrammes de séquence
+    ├── AI-FEATURES.md                # Intégrations OpenAI (Floppy + chat hôte)
+    ├── NATIVE-FEATURES.md            # Détails des fonctionnalités natives
     └── DEMO-SCRIPT.md                # Chapitrage de la vidéo de démo
 ```
+
+---
+
+## Documentation complémentaire
+
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Diagrammes C4 (Contexte, Conteneurs, Composants) et diagrammes de séquence.
+- [`docs/AI-FEATURES.md`](docs/AI-FEATURES.md) — Détails des deux intégrations OpenAI (assistant Floppy + chat avec l'hôte).
+- [`docs/NATIVE-FEATURES.md`](docs/NATIVE-FEATURES.md) — Détails et exemples de code des fonctionnalités natives.
+- [`docs/DEMO-SCRIPT.md`](docs/DEMO-SCRIPT.md) — Chapitrage horodaté de la vidéo de démonstration.
 
 ---
 
