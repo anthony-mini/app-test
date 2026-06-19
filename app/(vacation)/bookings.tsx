@@ -38,8 +38,10 @@ export default function BookingsScreen() {
   const [destinationNames, setDestinationNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    let mounted = true;
     DatabaseService.getAllDestinations()
       .then((destinations) => {
+        if (!mounted) return;
         const map: Record<string, string> = {};
         destinations.forEach((dest) => {
           map[dest.id] = dest.name;
@@ -49,6 +51,9 @@ export default function BookingsScreen() {
       .catch((error) => {
         if (__DEV__) console.error('Error loading destination names:', error);
       });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const handleBackPress = async () => {
@@ -58,7 +63,10 @@ export default function BookingsScreen() {
 
   const handleCancel = async (bookingId: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await cancelBooking(bookingId);
+    const ok = await cancelBooking(bookingId);
+    if (!ok) {
+      Alert.alert('Erreur', "L'annulation de la réservation a échoué. Veuillez réessayer.");
+    }
   };
 
   const handleDelete = (bookingId: string) => {
@@ -72,7 +80,10 @@ export default function BookingsScreen() {
           style: 'destructive',
           onPress: async () => {
             await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            await deleteBooking(bookingId);
+            const ok = await deleteBooking(bookingId);
+            if (!ok) {
+              Alert.alert('Erreur', 'La suppression de la réservation a échoué. Veuillez réessayer.');
+            }
           },
         },
       ]

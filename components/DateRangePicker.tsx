@@ -43,6 +43,10 @@ export default function DateRangePicker({
       setEndDate(null);
     } else if (startDate && !endDate) {
       // Deuxième clic
+      if (day.dateString === startDate) {
+        // Même jour : un séjour dure au moins une nuit, on ignore ce clic
+        return;
+      }
       if (day.dateString < startDate) {
         // Si la date est avant la date de début, inverser
         setEndDate(startDate);
