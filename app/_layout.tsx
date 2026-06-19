@@ -43,8 +43,6 @@ export default function RootLayout() {
         <Stack.Screen name="(vacation)" options={{ headerShown: false }} />
         <Stack.Screen name="(chat)" options={{ headerShown: false }} />
         <Stack.Screen name="(adv)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
       {shouldShowAd && <AdBanner onClose={closeAd} />}
       <StatusBar style="auto" />

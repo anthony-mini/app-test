@@ -12,7 +12,7 @@ Plan source : `/Users/anthonymini/.claude/plans/elegant-plotting-newt.md`
 - [x] P0 — Branche `docs/readme-and-fixes` + `docs/_PROGRESS.md` + dossier `screenshots/`
 - [x] C1 — Bookings persistés en SQLite (+ écran « Mes réservations ») — table bookings + CRUD DatabaseService, BookingViewModel branché, écran bookings.tsx, lien profil. tsc OK, lint 0 err.
 - [x] C2 — Config OpenAI unifiée (`EXPO_PUBLIC_OPENAI_API_KEY`) — FloppyAIService sur process.env, plugin react-native-dotenv retiré (babel+dep+lock), .env.example 1 var + avertissement sécurité. tsc OK.
-- [ ] C3 — Boilerplate inutilisé supprimé (après vérif d'usage) + app démarre
+- [x] C3 — Boilerplate inutilisé supprimé : groupe (tabs), modal.tsx, 8 composants template, hook+theme orphelins, assets react-logo. (adv)+AdBanner CONSERVÉS (câblés). tsc OK, 0 ref pendante.
 - [ ] A1 — `docs/ARCHITECTURE.md` : C4 Contexte/Conteneurs/Composants + 4 séquences (Mermaid)
 - [ ] R1 — `README.md` (FR) : lancement, choix techniques, fonctionnalités, captures, vidéo, archi
 - [ ] D1 — `docs/DEMO-SCRIPT.md` : chapitrage vidéo (nav/CRUD/persistance/API/états/natif)
