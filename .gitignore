@@ -41,3 +41,6 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Demo recording (too large for git — host externally / git-lfs)
+screenshots/*.mov
