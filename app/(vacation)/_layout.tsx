@@ -14,6 +14,7 @@ export default function VacationLayout() {
       <Stack.Screen name="interactive-map" options={{ headerShown: true }} />
       <Stack.Screen name="destination/[id]" />
       <Stack.Screen name="booking-confirmation" />
+      <Stack.Screen name="bookings" />
       <Stack.Screen name="profile" />
     </Stack>
   );

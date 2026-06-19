@@ -84,6 +84,7 @@ export default function DestinationDetailScreen() {
       checkInDate: new Date(selectedDates.startDate),
       checkOutDate: new Date(selectedDates.endDate),
       guests: 2,
+      pricePerNight: destination.price,
     });
 
     if (success) {

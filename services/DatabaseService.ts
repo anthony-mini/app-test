@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import { Booking } from '../models/Booking';
 
 const DB_NAME = 'vacation_app.db';
 
@@ -103,6 +104,18 @@ class DatabaseService {
         FOREIGN KEY (destination_id) REFERENCES destinations(id) ON DELETE CASCADE
       );
 
+      CREATE TABLE IF NOT EXISTS bookings (
+        id TEXT PRIMARY KEY,
+        destination_id TEXT NOT NULL,
+        user_id TEXT,
+        check_in_date TEXT NOT NULL,
+        check_out_date TEXT NOT NULL,
+        guests INTEGER NOT NULL DEFAULT 1,
+        total_price REAL NOT NULL,
+        status TEXT NOT NULL DEFAULT 'confirmed',
+        created_at TEXT NOT NULL
+      );
+
       CREATE INDEX IF NOT EXISTS idx_destinations_category ON destinations(category);
       CREATE INDEX IF NOT EXISTS idx_destinations_price ON destinations(price);
       CREATE INDEX IF NOT EXISTS idx_favorites_destination ON favorites(destination_id);
@@ -111,6 +124,7 @@ class DatabaseService {
       CREATE INDEX IF NOT EXISTS idx_hosts_destination ON hosts(destination_id);
       CREATE INDEX IF NOT EXISTS idx_chat_messages_destination ON chat_messages(destination_id);
       CREATE INDEX IF NOT EXISTS idx_chat_messages_timestamp ON chat_messages(timestamp);
+      CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
     `);
   }
 
@@ -972,6 +986,78 @@ class DatabaseService {
       lastMessageTime: row.last_message_time,
       messageCount: row.message_count,
     }));
+  }
+
+  async createBooking(booking: Booking): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    try {
+      await this.db.runAsync(
+        `INSERT INTO bookings (
+          id, destination_id, user_id, check_in_date, check_out_date,
+          guests, total_price, status, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          booking.id,
+          booking.destinationId,
+          booking.userId,
+          booking.checkInDate.toISOString(),
+          booking.checkOutDate.toISOString(),
+          booking.guests,
+          booking.totalPrice,
+          booking.status,
+          booking.createdAt.toISOString(),
+        ]
+      );
+    } catch (error) {
+      if (__DEV__) console.error('Error creating booking:', error);
+      throw error;
+    }
+  }
+
+  async getBookings(): Promise<Booking[]> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    const rows = await this.db.getAllAsync<any>(
+      'SELECT * FROM bookings ORDER BY created_at DESC'
+    );
+
+    return rows.map((row) => ({
+      id: row.id,
+      destinationId: row.destination_id,
+      userId: row.user_id,
+      checkInDate: new Date(row.check_in_date),
+      checkOutDate: new Date(row.check_out_date),
+      guests: row.guests,
+      totalPrice: row.total_price,
+      status: row.status as Booking['status'],
+      createdAt: new Date(row.created_at),
+    }));
+  }
+
+  async updateBookingStatus(id: string, status: Booking['status']): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    try {
+      await this.db.runAsync(
+        'UPDATE bookings SET status = ? WHERE id = ?',
+        [status, id]
+      );
+    } catch (error) {
+      if (__DEV__) console.error('Error updating booking status:', error);
+      throw error;
+    }
+  }
+
+  async deleteBooking(id: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    try {
+      await this.db.runAsync('DELETE FROM bookings WHERE id = ?', [id]);
+    } catch (error) {
+      if (__DEV__) console.error('Error deleting booking:', error);
+      throw error;
+    }
   }
 }
 

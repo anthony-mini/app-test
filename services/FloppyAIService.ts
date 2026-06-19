@@ -1,4 +1,4 @@
-import { OPENAI_API_KEY } from '@env';
+const OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
 
 // Lazy load OpenAI pour réduire le bundle initial
 let OpenAI: any = null;

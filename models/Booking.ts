@@ -15,4 +15,5 @@ export interface BookingRequest {
   checkInDate: Date;
   checkOutDate: Date;
   guests: number;
+  pricePerNight?: number;
 }
